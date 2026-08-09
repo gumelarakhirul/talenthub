@@ -27,11 +27,11 @@ export interface RawProfile {
   isValid: boolean;
 }
 
-export async function scrapeInstagramProfiles(usernames: string[]): Promise<RawProfile[]> {
+export async function scrapeInstagramProfiles(usernames: string[], resultsLimit = 30): Promise<RawProfile[]> {
   const run = await client.actor('apify/instagram-scraper').call({
     directUrls: usernames.map(u => `https://www.instagram.com/${u}/`),
     resultsType: 'details',
-    resultsLimit: 30,
+    resultsLimit,
   });
 
   const { items } = await client.dataset(run.defaultDatasetId).listItems();
@@ -67,10 +67,10 @@ export async function scrapeInstagramProfiles(usernames: string[]): Promise<RawP
   });
 }
 
-export async function scrapeTiktokProfiles(usernames: string[]): Promise<RawProfile[]> {
+export async function scrapeTiktokProfiles(usernames: string[], resultsPerPage = 30): Promise<RawProfile[]> {
   const run = await client.actor('clockworks/tiktok-scraper').call({
     profiles: usernames,
-    resultsPerPage: 30,
+    resultsPerPage,
     shouldDownloadCovers: false,
     shouldDownloadVideos: false,
   });

@@ -87,6 +87,7 @@ export default function CreatorDiscoveryPage() {
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [otherInputs, setOtherInputs] = useState<Record<string, string>>({});
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const refreshedPhotoPages = useRef(new Set<string>());
 
   // --- STATES MODAL ADD PROJECT (hanya dipakai kalau BUKAN edit mode) ---
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -315,6 +316,52 @@ export default function CreatorDiscoveryPage() {
   const endIndex = Math.min(startIndex + entriesPerPage, totalEntries);
 
   const currentData = filteredCreators.slice(startIndex, endIndex);
+  const currentPhotoPageKey = currentData
+    .filter((creator) => !creator.photo_url?.startsWith("data:image/"))
+    .map((creator) => creator.no)
+    .sort((a, b) => a - b)
+    .join(",");
+
+  useEffect(() => {
+    if (!currentPhotoPageKey || refreshedPhotoPages.current.has(currentPhotoPageKey)) return;
+    refreshedPhotoPages.current.add(currentPhotoPageKey);
+    const controller = new AbortController();
+
+    async function refreshVisibleProfilePhotos() {
+      try {
+        const creatorIds = currentPhotoPageKey.split(",").map(Number);
+        const response = await fetch("/api/discovery/profile-photos", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ creatorIds }),
+          signal: controller.signal,
+        });
+        if (!response.ok) return;
+
+        const result = await response.json() as {
+          photos?: Array<{ id: number; photo_url: string | null }>;
+        };
+        const photos = new Map(
+          (result.photos ?? [])
+            .filter((item) => item.photo_url)
+            .map((item) => [item.id, item.photo_url]),
+        );
+        if (!photos.size || controller.signal.aborted) return;
+
+        setCreatorsData((previous) => previous.map((creator) => ({
+          ...creator,
+          photo_url: photos.get(creator.no) ?? creator.photo_url,
+        })));
+      } catch (error) {
+        if (!(error instanceof DOMException && error.name === "AbortError")) {
+          console.error("Failed to refresh profile photos:", error);
+        }
+      }
+    }
+
+    void refreshVisibleProfilePhotos();
+    return () => controller.abort();
+  }, [currentPhotoPageKey]);
 
   const toggleSelectAll = () => {
     const currentPageIds = currentData.map((item) => item.no);

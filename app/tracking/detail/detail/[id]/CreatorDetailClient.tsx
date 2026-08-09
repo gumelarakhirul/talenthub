@@ -61,7 +61,10 @@ function formatDate(iso: string): string {
 }
 
 function proxied(url?: string | null): string {
-  return url ? "/api/image-proxy?url=" + encodeURIComponent(url) : "";
+  const value = String(url ?? "").trim();
+  if (!value) return "";
+  if (value.startsWith("/") || value.startsWith("data:image/")) return value;
+  return "/api/image-proxy?url=" + encodeURIComponent(value);
 }
 
 // Outline-icon-in-a-box style, matching the step-indicator look

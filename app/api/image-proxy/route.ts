@@ -38,7 +38,10 @@ export async function GET(request: NextRequest) {
 
   try {
     const res = await fetch(imageUrl, {
+      cache: "no-store",
+      redirect: "follow",
       headers: {
+        Accept: "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         Referer: imageUrl.includes("tiktok")
@@ -48,16 +51,13 @@ export async function GET(request: NextRequest) {
     });
 
     if (!res.ok) {
-      return NextResponse.json(
-        { error: "Failed to fetch image" },
-        { status: res.status }
-      );
+      return NextResponse.redirect(new URL("/image/default-kol-avatar.png", request.url));
     }
 
     const buffer = await res.arrayBuffer();
     const contentType = res.headers.get("content-type") || "image/jpeg";
     if (!contentType.toLowerCase().startsWith("image/")) {
-      return NextResponse.json({ error: "Remote resource is not an image" }, { status: 415 });
+      return NextResponse.redirect(new URL("/image/default-kol-avatar.png", request.url));
     }
 
     return new NextResponse(buffer, {
@@ -67,9 +67,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    return NextResponse.json(
-      { error: "Proxy error" },
-      { status: 500 }
-    );
+    return NextResponse.redirect(new URL("/image/default-kol-avatar.png", request.url));
   }
 }

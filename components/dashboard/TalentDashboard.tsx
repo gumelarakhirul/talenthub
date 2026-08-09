@@ -23,6 +23,12 @@ const currency = (value: number) => `Rp${Math.round(value).toLocaleString("id-ID
 const number = (value: number) => Math.round(value).toLocaleString("id-ID");
 const date = (value: string) => new Date(value).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 const compactCurrency = (value: number) => value >= 1_000_000_000 ? `Rp ${(value / 1_000_000_000).toFixed(1)} M` : value >= 1_000_000 ? `Rp ${Math.round(value / 1_000_000)} jt` : currency(value);
+const profilePhotoSource = (value: string | null) => {
+  const url = String(value ?? "").trim();
+  if (!url) return "/image/default-kol-avatar.png";
+  if (url.startsWith("/") || url.startsWith("data:image/")) return url;
+  return `/api/image-proxy?url=${encodeURIComponent(url)}`;
+};
 
 export default function TalentDashboard() {
   const [period, setPeriod] = useState("this_month");
@@ -91,7 +97,7 @@ export default function TalentDashboard() {
           <div className="flex flex-wrap justify-center gap-4">{data.creatorStats.byPlatform.map((item, index) => <span key={item.label} className="inline-flex items-center gap-2 text-xs text-slate-600"><span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: colors[index % colors.length] }} />{item.label}: {number(item.value)}</span>)}</div>
         </ChartCard>
         <Card title="Most Engaged Creators" subtitle="Creators with the highest number of unique project engagements">
-          <RankList empty="No creator engagement data is available for this period.">{data.creatorStats.top.map((creator, index) => <div key={creator.id} className="flex items-center gap-3 rounded-xl border border-slate-100 p-3"><span className="w-6 text-sm font-bold text-slate-400">{index + 1}</span><img src={creator.photo_url ? `/api/image-proxy?url=${encodeURIComponent(creator.photo_url)}` : "/image/default-kol-avatar.png"} onError={(event) => { event.currentTarget.src = "/image/default-kol-avatar.png"; }} alt="" className="h-10 w-10 rounded-full bg-slate-100 object-cover" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-slate-900">{creator.name}</p><p className="truncate text-xs text-slate-500">@{creator.username.replace(/^@+/, "")} · {creator.social_media}</p></div><span className="rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">{creator.projects} Project{creator.projects === 1 ? "" : "s"}</span></div>)}</RankList>
+          <RankList empty="No creator engagement data is available for this period.">{data.creatorStats.top.map((creator, index) => <div key={creator.id} className="flex items-center gap-3 rounded-xl border border-slate-100 p-3"><span className="w-6 text-sm font-bold text-slate-400">{index + 1}</span><img src={profilePhotoSource(creator.photo_url)} onError={(event) => { event.currentTarget.src = "/image/default-kol-avatar.png"; }} alt="" className="h-10 w-10 rounded-full bg-slate-100 object-cover" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-slate-900">{creator.name}</p><p className="truncate text-xs text-slate-500">@{creator.username.replace(/^@+/, "")} · {creator.social_media}</p></div><span className="rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">{creator.projects} Project{creator.projects === 1 ? "" : "s"}</span></div>)}</RankList>
         </Card>
       </div>
 

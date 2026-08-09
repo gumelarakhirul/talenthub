@@ -28,6 +28,13 @@ type Creator = {
   followersRaw: number;
 };
 
+function profilePhotoSource(value: string | null): string {
+  const url = String(value ?? "").trim();
+  if (!url) return "/image/default-kol-avatar.png";
+  if (url.startsWith("/") || url.startsWith("data:image/")) return url;
+  return `/api/image-proxy?url=${encodeURIComponent(url)}`;
+}
+
 export default function CreatorDiscoveryPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -685,9 +692,7 @@ export default function CreatorDiscoveryPage() {
                       <div className="w-16 h-16 rounded-lg overflow-hidden bg-blue-100 flex items-center justify-center mx-auto">
                         {row.photo_url ? (
                           <img
-                            src={`/api/image-proxy?url=${encodeURIComponent(
-                              row.photo_url
-                            )}`}
+                            src={profilePhotoSource(row.photo_url)}
                             alt={row.name}
                             className="w-full h-full object-cover"
                             onError={(e) => {

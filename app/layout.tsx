@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { authOptions } from "@/auth";
 import AuthProvider from "@/components/providers/AuthProvider";
+import { Analytics } from "@vercel/analytics/next";
 import { getServerSession } from "next-auth";
 import "./globals.css";
 
@@ -20,6 +21,7 @@ export default async function RootLayout({
     <html lang="en">
       <body className="antialiased">
         <AuthProvider session={session}>{children}</AuthProvider>
+        <Analytics />
       </body>
     </html>
   );

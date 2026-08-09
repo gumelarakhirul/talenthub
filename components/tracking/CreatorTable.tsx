@@ -40,9 +40,15 @@ function getPhotoSrc(creator: any): string | null {
   }
 }
 
+function getRawPhotoSrc(creator: any): string | null {
+  const value = String(creator.photo || creator.photo_url || creator.photoUrl || "").trim();
+  return value || null;
+}
+
 function PhotoCell(props: { creator: any }) {
   const creator = props.creator;
   const photoSrc = getPhotoSrc(creator);
+  const rawPhotoSrc = getRawPhotoSrc(creator);
 
   return (
     <div className="w-16 h-16 rounded-lg overflow-hidden bg-blue-100 flex items-center justify-center mx-auto">
@@ -51,9 +57,13 @@ function PhotoCell(props: { creator: any }) {
         alt={creator.name || "Creator"}
         className="w-full h-full object-cover"
         onError={(event) => {
-          if (!event.currentTarget.src.endsWith(DEFAULT_CREATOR_PHOTO)) {
-            event.currentTarget.src = DEFAULT_CREATOR_PHOTO;
+          const image = event.currentTarget;
+          if (rawPhotoSrc?.startsWith("http") && image.dataset.directTried !== "true") {
+            image.dataset.directTried = "true";
+            image.src = rawPhotoSrc;
+            return;
           }
+          if (!image.src.endsWith(DEFAULT_CREATOR_PHOTO)) image.src = DEFAULT_CREATOR_PHOTO;
         }}
       />
     </div>

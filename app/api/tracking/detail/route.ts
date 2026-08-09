@@ -50,8 +50,10 @@ export async function GET(request: Request) {
       },
     });
 
+    type ProjectDetail = (typeof details)[number];
+
     const subtotal = details.reduce(
-      (sum, item) => sum + Number(item.drf_markup_price ?? 0) * Number(item.drf_qty),
+      (sum: number, item: ProjectDetail) => sum + Number(item.drf_markup_price ?? 0) * Number(item.drf_qty),
       0
     );
 
@@ -60,7 +62,7 @@ export async function GET(request: Request) {
     const { dpp, ppn, grandTotal } = calculateTaxSummary(subtotal, taxRate);
 
     return NextResponse.json({
-      creators: details.map((item) => ({
+      creators: details.map((item: ProjectDetail) => ({
         ...item, // pass all original fields
         id: item.drf_id,
 

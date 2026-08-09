@@ -2,7 +2,7 @@ import { PrismaClient, Prisma } from '@prisma/client';
 import { scrapeInstagramProfiles, scrapeTiktokProfiles, RawPost } from './apify';
 import { detectEndorsePosts, suggestNewUsernames, checkIndonesianLocation } from './gemini';
 import { computeInsightsFromPosts } from './insights';
-import { persistProfileImage } from './profile-image';
+import { persistFirstProfileImage } from './profile-image';
 
 const prisma = new PrismaClient();
 
@@ -80,7 +80,10 @@ export async function processCreator(entry: SeedEntry) {
   const avgViewBrand = average(brandedViews);
 
   const tier = calculateTier(profile.followers);
-  const persistedPhoto = await persistProfileImage(profile.photoUrl);
+  const persistedPhoto = await persistFirstProfileImage([
+    ...(profile.photoUrls ?? []),
+    profile.photoUrl,
+  ]);
 
   // 5b. Insight tambahan: avg likes/comments + top hashtags/mentions.
   // Reuses the same pure helper as the "New Discovery" live-search page,

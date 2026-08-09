@@ -21,6 +21,7 @@ export interface RawProfile {
   following: number;
   totalPost: number;
   photoUrl?: string;
+  photoUrls?: string[];
   bio?: string;
   posts: RawPost[];
   isValid: boolean;
@@ -35,13 +36,22 @@ export async function scrapeInstagramProfiles(usernames: string[]): Promise<RawP
 
   const { items } = await client.dataset(run.defaultDatasetId).listItems();
 
-  return items.map((item: any) => ({
+  return items.map((item: any) => {
+    const photoUrls = imageUrls(
+      item.profilePicUrlHD,
+      item.profilePicUrl,
+      item.profile_pic_url_hd,
+      item.profile_pic_url,
+    );
+
+    return ({
     username: item.username,
     socialMedia: 'instagram' as const,
     followers: item.followersCount ?? 0,
     following: item.followsCount ?? 0,
     totalPost: item.postsCount ?? 0,
-    photoUrl: item.profilePicUrl,
+    photoUrl: photoUrls[0],
+    photoUrls,
     bio: item.biography,
     posts: (item.latestPosts ?? []).map((p: any) => ({
       caption: p.caption ?? '',
@@ -53,7 +63,8 @@ export async function scrapeInstagramProfiles(usernames: string[]): Promise<RawP
       thumbnailUrl: p.displayUrl,
     })),
     isValid: !item.error,
-  }));
+    });
+  });
 }
 
 export async function scrapeTiktokProfiles(usernames: string[]): Promise<RawProfile[]> {
@@ -75,13 +86,22 @@ export async function scrapeTiktokProfiles(usernames: string[]): Promise<RawProf
 
   return Array.from(grouped.entries()).map(([username, posts]) => {
     const author = posts[0].authorMeta;
+    const photoUrls = imageUrls(
+      author.avatarLarger,
+      author.avatarMedium,
+      author.avatarThumb,
+      author.avatar,
+      author.avatarLargerUrl,
+      author.avatarMediumUrl,
+    );
     return {
       username,
       socialMedia: 'tiktok' as const,
       followers: author.fans ?? 0,
       following: author.following ?? 0,
       totalPost: author.video ?? 0,
-      photoUrl: author.avatar,
+      photoUrl: photoUrls[0],
+      photoUrls,
       bio: author.signature,
       posts: posts.map((p: any) => ({
         caption: p.text ?? '',

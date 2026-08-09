@@ -38,3 +38,18 @@ export async function persistProfileImage(sourceUrl?: string | null): Promise<st
     return url;
   }
 }
+
+export async function persistFirstProfileImage(
+  sourceUrls: Array<string | null | undefined>,
+): Promise<string | null> {
+  const candidates = [...new Set(sourceUrls.map((value) => String(value ?? "").trim()).filter(Boolean))];
+
+  for (const candidate of candidates) {
+    const persisted = await persistProfileImage(candidate);
+    if (persisted?.startsWith("data:image/")) return persisted;
+  }
+
+  // Keep the best database URL as a browser-side fallback. The UI will first
+  // try the authenticated proxy and then this original URL directly.
+  return candidates[0] ?? null;
+}

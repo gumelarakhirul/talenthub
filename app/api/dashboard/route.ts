@@ -10,6 +10,33 @@ const amountSelect = {
   dtl_project: { select: { drf_markup_price: true, drf_qty: true, drf_creatorid: true } },
 } as const;
 
+const TRANSIENT_DATABASE_CODES = new Set(["P1001", "P1002", "P1008", "P1017", "P2024"]);
+
+function isTransientDatabaseError(error: unknown): boolean {
+  const candidate = error as { code?: unknown; message?: unknown };
+  const code = typeof candidate?.code === "string" ? candidate.code : "";
+  const message = typeof candidate?.message === "string" ? candidate.message.toLowerCase() : "";
+  return TRANSIENT_DATABASE_CODES.has(code)
+    || message.includes("can't reach database server")
+    || message.includes("connection pool")
+    || message.includes("timed out")
+    || message.includes("connection closed");
+}
+
+async function withDatabaseRetry<T>(operation: () => Promise<T>, attempts = 3): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      if (!isTransientDatabaseError(error) || attempt === attempts) throw error;
+      await new Promise((resolve) => setTimeout(resolve, attempt * 350));
+    }
+  }
+  throw lastError;
+}
+
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -37,7 +64,7 @@ export async function GET(request: Request) {
       outstandingInvoices,
       trendProjects,
       deadlineProjects,
-    ] = await Promise.all([
+    ] = await withDatabaseRetry(() => prisma.$transaction([
       prisma.trs_project.findMany({
         where: { creadate: { gte: start, lt: end } },
         select: { prj_id: true, prj_status: true, prj_ienddate: true, prj_brand: true, mst_brand: { select: { brd_nama: true } }, ...amountSelect },
@@ -73,7 +100,7 @@ export async function GET(request: Request) {
         select: { prj_id: true, prj_nama: true, prj_status: true, prj_denddate: true, mst_brand: { select: { brd_nama: true } } },
         orderBy: { prj_denddate: "asc" }, take: 5,
       }),
-    ]);
+    ]));
 
     const completedAmount = (project: typeof completedInPeriod[number]) =>
       projectGrandTotal(project.dtl_project, project.prj_invoice_tax_rate ?? project.prj_tax_rate);
@@ -169,6 +196,17 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     console.error("DASHBOARD ERROR:", error);
-    return NextResponse.json({ error: "Failed to load dashboard data" }, { status: 500 });
+    const temporarilyUnavailable = isTransientDatabaseError(error);
+    return NextResponse.json(
+      {
+        error: temporarilyUnavailable
+          ? "The database is temporarily unavailable. Please try again."
+          : "Failed to load dashboard data",
+      },
+      {
+        status: temporarilyUnavailable ? 503 : 500,
+        headers: temporarilyUnavailable ? { "Retry-After": "2" } : undefined,
+      },
+    );
   }
 }

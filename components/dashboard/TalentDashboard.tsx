@@ -35,19 +35,38 @@ export default function TalentDashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [requestVersion, setRequestVersion] = useState(0);
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch(`/api/dashboard?period=${period}`, { signal: controller.signal, cache: "no-store" })
-      .then(async (response) => {
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.error ?? "Failed to load dashboard data");
-        setData(result);
-      })
-      .catch((reason) => { if (reason.name !== "AbortError") setError(reason instanceof Error ? reason.message : "Failed to load dashboard data"); })
-      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    const load = async () => {
+      setLoading(true);
+      setError("");
+      let lastError: Error | null = null;
+
+      for (let attempt = 1; attempt <= 3; attempt += 1) {
+        try {
+          const response = await fetch(`/api/dashboard?period=${period}`, {
+            signal: controller.signal,
+            cache: "no-store",
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(result.error ?? "Failed to load dashboard data");
+          if (!controller.signal.aborted) setData(result);
+          return;
+        } catch (reason) {
+          if (reason instanceof DOMException && reason.name === "AbortError") return;
+          lastError = reason instanceof Error ? reason : new Error("Failed to load dashboard data");
+          if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, attempt * 700));
+        }
+      }
+
+      if (!controller.signal.aborted) setError(lastError?.message ?? "Failed to load dashboard data");
+    };
+
+    void load().finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, [period]);
+  }, [period, requestVersion]);
 
   const changePeriod = (value: string) => {
     setLoading(true);
@@ -56,7 +75,7 @@ export default function TalentDashboard() {
   };
 
   if (loading && !data) return <DashboardSkeleton />;
-  if (error && !data) return <ErrorState message={error} onRetry={() => window.location.reload()} />;
+  if (error && !data) return <ErrorState message={error} onRetry={() => setRequestVersion((value) => value + 1)} />;
   if (!data) return null;
 
   const growth = data.overview.revenueGrowth;

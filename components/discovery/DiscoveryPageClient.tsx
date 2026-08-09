@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, type SyntheticEvent } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { showAlertValidationError, showAlertSuccess } from "@/lib/alert";
 import Link from "next/link";
@@ -33,6 +33,24 @@ function profilePhotoSource(value: string | null): string {
   if (!url) return "/image/default-kol-avatar.png";
   if (url.startsWith("/") || url.startsWith("data:image/")) return url;
   return `/api/image-proxy?url=${encodeURIComponent(url)}`;
+}
+
+function handleProfilePhotoError(
+  event: SyntheticEvent<HTMLImageElement>,
+  databaseUrl: string | null,
+) {
+  const image = event.currentTarget;
+  const rawUrl = String(databaseUrl ?? "").trim();
+
+  if (/^https?:\/\//i.test(rawUrl) && image.dataset.directTried !== "true") {
+    image.dataset.directTried = "true";
+    image.src = rawUrl;
+    return;
+  }
+
+  if (!image.src.endsWith("/image/default-kol-avatar.png")) {
+    image.src = "/image/default-kol-avatar.png";
+  }
 }
 
 export default function CreatorDiscoveryPage() {
@@ -690,22 +708,13 @@ export default function CreatorDiscoveryPage() {
                     </td>
                     <td className="p-3 border-r border-gray-200 text-center">
                       <div className="w-16 h-16 rounded-lg overflow-hidden bg-blue-100 flex items-center justify-center mx-auto">
-                        {row.photo_url ? (
-                          <img
-                            src={profilePhotoSource(row.photo_url)}
-                            alt={row.name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display =
-                                "none";
-                              (
-                                e.target as HTMLImageElement
-                              ).parentElement!.innerHTML = "🖼️";
-                            }}
-                          />
-                        ) : (
-                          <span className="text-blue-500">🖼️</span>
-                        )}
+                        <img
+                          src={profilePhotoSource(row.photo_url)}
+                          alt={`${row.name} profile`}
+                          className="w-full h-full object-cover"
+                          referrerPolicy="no-referrer"
+                          onError={(event) => handleProfilePhotoError(event, row.photo_url)}
+                        />
                       </div>
                     </td>
                     <td className="p-3 border-r border-gray-200 font-medium whitespace-nowrap">

@@ -64,7 +64,7 @@ export async function GET(request: Request) {
       outstandingInvoices,
       trendProjects,
       deadlineProjects,
-    ] = await withDatabaseRetry(() => prisma.$transaction([
+    ] = await withDatabaseRetry(() => Promise.all([
       prisma.trs_project.findMany({
         where: { creadate: { gte: start, lt: end } },
         select: { prj_id: true, prj_status: true, prj_ienddate: true, prj_brand: true, mst_brand: { select: { brd_nama: true } }, ...amountSelect },
@@ -100,7 +100,7 @@ export async function GET(request: Request) {
         select: { prj_id: true, prj_nama: true, prj_status: true, prj_denddate: true, mst_brand: { select: { brd_nama: true } } },
         orderBy: { prj_denddate: "asc" }, take: 5,
       }),
-    ]));
+    ] as const));
 
     const completedAmount = (project: typeof completedInPeriod[number]) =>
       projectGrandTotal(project.dtl_project, project.prj_invoice_tax_rate ?? project.prj_tax_rate);

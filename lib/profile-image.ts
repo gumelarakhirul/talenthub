@@ -1,5 +1,21 @@
 const MAX_PROFILE_IMAGE_BYTES = 1_500_000;
 
+export function firstProfileImageUrl(
+  sourceUrls: Array<string | null | undefined>,
+): string | null {
+  for (const value of sourceUrls) {
+    const candidate = String(value ?? "").trim();
+    if (!candidate) continue;
+    try {
+      const parsed = new URL(candidate);
+      if (parsed.protocol === "https:" || parsed.protocol === "http:") return candidate;
+    } catch {
+      // Ignore malformed scraper output and try the next candidate.
+    }
+  }
+  return null;
+}
+
 export async function persistProfileImage(sourceUrl?: string | null): Promise<string | null> {
   const url = String(sourceUrl ?? "").trim();
   if (!url) return null;

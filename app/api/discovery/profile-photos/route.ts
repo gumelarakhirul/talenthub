@@ -1,6 +1,6 @@
 import { authOptions } from "@/auth";
 import { scrapeInstagramProfiles, scrapeTiktokProfiles, type RawProfile } from "@/lib/apify";
-import { persistFirstProfileImage } from "@/lib/profile-image";
+import { firstProfileImageUrl } from "@/lib/profile-image";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       select: { id: true, username: true, social_media: true, photo_url: true },
     });
 
-    const needsRefresh = creators.filter((creator) => !creator.photo_url?.startsWith("data:image/"));
+    const needsRefresh = creators;
     const groups = new Map<string, typeof needsRefresh>();
     for (const creator of needsRefresh) {
       const platform = creator.social_media.trim().toLowerCase();
@@ -57,11 +57,11 @@ export async function POST(request: Request) {
       for (const creator of platformCreators) {
         const profile = profilesByUsername.get(normalizedUsername(creator.username));
         if (!profile?.isValid) continue;
-        const photo = await persistFirstProfileImage([
+        const photo = firstProfileImageUrl([
           ...(profile.photoUrls ?? []),
           profile.photoUrl,
         ]);
-        if (!photo?.startsWith("data:image/")) continue;
+        if (!photo) continue;
 
         await prisma.mst_creators.update({
           where: { id: creator.id },

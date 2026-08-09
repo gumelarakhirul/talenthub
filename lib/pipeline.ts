@@ -2,7 +2,7 @@ import { PrismaClient, Prisma } from '@prisma/client';
 import { scrapeInstagramProfiles, scrapeTiktokProfiles, RawPost } from './apify';
 import { detectEndorsePosts, suggestNewUsernames, checkIndonesianLocation } from './gemini';
 import { computeInsightsFromPosts } from './insights';
-import { persistFirstProfileImage } from './profile-image';
+import { firstProfileImageUrl } from './profile-image';
 
 const prisma = new PrismaClient();
 
@@ -80,7 +80,7 @@ export async function processCreator(entry: SeedEntry) {
   const avgViewBrand = average(brandedViews);
 
   const tier = calculateTier(profile.followers);
-  const persistedPhoto = await persistFirstProfileImage([
+  const persistedPhoto = firstProfileImageUrl([
     ...(profile.photoUrls ?? []),
     profile.photoUrl,
   ]);

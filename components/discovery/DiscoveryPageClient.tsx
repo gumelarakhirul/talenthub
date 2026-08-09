@@ -317,7 +317,6 @@ export default function CreatorDiscoveryPage() {
 
   const currentData = filteredCreators.slice(startIndex, endIndex);
   const currentPhotoPageKey = currentData
-    .filter((creator) => !creator.photo_url?.startsWith("data:image/"))
     .map((creator) => creator.no)
     .sort((a, b) => a - b)
     .join(",");

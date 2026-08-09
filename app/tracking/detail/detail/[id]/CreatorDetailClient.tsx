@@ -57,7 +57,7 @@ function formatNumber(num: number): string {
 function formatDate(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "-";
-  return d.toLocaleDateString("en-US", { day: "numeric", month: "numeric", year: "numeric" });
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
 }
 
 function proxied(url?: string | null): string {

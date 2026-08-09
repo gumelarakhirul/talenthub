@@ -814,7 +814,7 @@ console.log(creators);
 
                         <p className="mt-1 text-xs text-slate-400">
                           {step.date
-                            ? new Date(step.date).toLocaleDateString("id-ID", {
+                            ? new Date(step.date).toLocaleDateString("en-GB", {
                                 day: "numeric",
                                 month: "long",
                                 year: "numeric",
@@ -847,7 +847,7 @@ console.log(creators);
               label="Date"
               value={
                   projectDetail?.createdAt
-                      ? new Date(projectDetail.createdAt).toLocaleDateString("id-ID", {
+                      ? new Date(projectDetail.createdAt).toLocaleDateString("en-GB", {
                           day: "numeric",
                           month: "long",
                           year: "numeric",

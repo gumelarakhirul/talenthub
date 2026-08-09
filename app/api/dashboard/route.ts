@@ -95,7 +95,7 @@ export async function GET(request: Request) {
 
     const trend = Array.from({ length: 12 }, (_, index) => {
       const date = new Date(now.getFullYear(), now.getMonth() - 11 + index, 1);
-      return { key: `${date.getFullYear()}-${date.getMonth()}`, label: date.toLocaleDateString("id-ID", { month: "short" }), value: 0 };
+      return { key: `${date.getFullYear()}-${date.getMonth()}`, label: date.toLocaleDateString("en-GB", { month: "short" }), value: 0 };
     });
     for (const project of trendProjects) {
       if (!project.prj_ienddate) continue;

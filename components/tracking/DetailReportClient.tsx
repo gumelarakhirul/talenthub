@@ -88,7 +88,7 @@ export default function DetailReportClient() {
             <Field label="Brand Name" value={data.project.brand ?? '-'} />
             <Field label="Project Name" value={data.project.name} />
             <Field label="PIC" value={data.project.pic} />
-            <Field label="Report Date" value={data.project.date ? new Date(data.project.date).toLocaleDateString('id-ID', { dateStyle: 'long' }) : '-'} />
+            <Field label="Report Date" value={data.project.date ? new Date(data.project.date).toLocaleDateString('en-GB', { dateStyle: 'long' }) : '-'} />
           </div>
         </section>
       )}
@@ -155,7 +155,7 @@ function ReportCard({ item, loading }: { item: Item; loading: boolean }) {
           </a>
           <div><h3 className="mb-3 text-lg font-bold">Caption</h3><div className="max-h-40 overflow-y-auto whitespace-pre-wrap rounded-xl border border-slate-200 p-4 text-sm">{report.caption || '-'}</div>
             {metrics.length > 0 && <><h3 className="mb-4 mt-7 text-lg font-bold">Performance</h3><div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{metrics.map((metric) => <Metric key={metric.title} title={metric.title} value={metric.value} />)}</div></>}
-            <p className="mt-4 text-xs text-slate-400">Last fetched {new Date(report.scraped_at).toLocaleString('id-ID')}</p></div>
+            <p className="mt-4 text-xs text-slate-400">Last fetched {new Date(report.scraped_at).toLocaleString('en-GB')}</p></div>
         </div>}
     </article>
   );

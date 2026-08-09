@@ -240,20 +240,6 @@ export async function PATCH(req: Request) {
             { status: 400 },
           );
         }
-        const projectLinks = await prisma.dtl_project.findMany({
-          where: { drf_projectid: detail.drf_projectid, drf_id: { not: id }, drf_link_content: { not: null } },
-          select: { drf_id: true, drf_link_content: true },
-        });
-        const duplicate = projectLinks.find((item) => {
-          try { return getContentIdentity(item.drf_link_content!).normalizedUrl === identity.normalizedUrl; }
-          catch { return false; }
-        });
-        if (duplicate) {
-          return NextResponse.json(
-            { error: `Duplicate content URL is already used by creator detail ${duplicate.drf_id}` },
-            { status: 409 },
-          );
-        }
         dataToUpdate.drf_link_content = identity.normalizedUrl;
       }
     }

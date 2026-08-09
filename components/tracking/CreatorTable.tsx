@@ -492,7 +492,7 @@ export default function CreatorTable({
             >
               {creator.drf_planning_upload ? (
                 new Date(creator.drf_planning_upload).toLocaleDateString(
-                  "id-ID",
+                  "en-GB",
                   { day: "numeric", month: "long", year: "numeric" }
                 )
               ) : (
@@ -515,7 +515,7 @@ export default function CreatorTable({
             >
               {creator.drf_actual_upload ? (
                 new Date(creator.drf_actual_upload).toLocaleDateString(
-                  "id-ID",
+                  "en-GB",
                   { day: "numeric", month: "long", year: "numeric" }
                 )
               ) : (

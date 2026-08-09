@@ -401,11 +401,11 @@ const stepStyles = {
           </span>
           <p className="mt-5 text-xs text-slate-500">
           {project.date
-            ? `${new Date(project.date).toLocaleDateString("id-ID", {
+            ? `${new Date(project.date).toLocaleDateString("en-GB", {
                   day: "numeric",
                   month: "long",
                   year: "numeric",
-                })} • ${new Date(project.date).toLocaleTimeString("id-ID", {
+                })} • ${new Date(project.date).toLocaleTimeString("en-GB", {
                   hour: "2-digit",
                   minute: "2-digit",
                   hour12: false,

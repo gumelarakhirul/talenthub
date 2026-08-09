@@ -132,17 +132,6 @@ export async function POST(request: Request) {
   }
 
   const rows = await getRows(projectId, detailIds);
-  const duplicateUrls = new Map<string, number[]>();
-  for (const row of rows) {
-    if (!row.drf_link_content) continue;
-    try {
-      const identity = getContentIdentity(row.drf_link_content, row.mst_creators.social_media);
-      duplicateUrls.set(identity.normalizedUrl, [...(duplicateUrls.get(identity.normalizedUrl) ?? []), row.drf_id]);
-    } catch { /* the row receives its detailed validation error below */ }
-  }
-  const duplicateDetailIds = new Set(
-    [...duplicateUrls.values()].filter((ids) => ids.length > 1).flat(),
-  );
   const results = await Promise.all(rows.map(async (row) => {
     const resultContext = {
       detailId: row.drf_id,
@@ -150,9 +139,6 @@ export async function POST(request: Request) {
       contentUrl: row.drf_link_content,
     };
     if (!row.drf_link_content) return { ...resultContext, error: 'URL content is empty' };
-    if (duplicateDetailIds.has(row.drf_id)) {
-      return { ...resultContext, error: 'Duplicate content URL is assigned to multiple creators' };
-    }
     try {
       const identity = getContentIdentity(row.drf_link_content, row.mst_creators.social_media);
       console.info('[SCRAPING START]', {

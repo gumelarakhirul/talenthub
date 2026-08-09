@@ -20,7 +20,8 @@ function chunks<T>(items: T[], size: number): T[][] {
 
 async function scrapeProfiles(platform: string, usernames: string[]): Promise<RawProfile[]> {
   if (platform === "instagram") return scrapeInstagramProfiles(usernames, usernames.length);
-  if (platform === "tiktok") return scrapeTiktokProfiles(usernames, 1);
+  // The daily job also refreshes creator content thumbnails and metrics.
+  if (platform === "tiktok") return scrapeTiktokProfiles(usernames, 30);
   return [];
 }
 
@@ -38,6 +39,7 @@ export async function GET(request: Request) {
   });
 
   let updated = 0;
+  let updatedPosts = 0;
   const failures: Array<{ platform: string; usernames: string[]; reason: string }> = [];
 
   for (const platform of ["instagram", "tiktok"] as const) {
@@ -59,21 +61,54 @@ export async function GET(request: Request) {
           const photoUrl = profile?.isValid
             ? firstProfileImageUrl([...(profile.photoUrls ?? []), profile.photoUrl])
             : null;
-          return photoUrl ? [{ id: creator.id, photoUrl }] : [];
+          return profile && photoUrl ? [{ creator, profile, photoUrl }] : [];
         });
 
-        if (updates.length) {
-          await prisma.$transaction(
-            updates.map((item) => prisma.mst_creators.update({
-              where: { id: item.id },
+        for (const item of updates) {
+          const validPosts = item.profile.posts
+            .filter((post) => post.postedAt && !Number.isNaN(new Date(post.postedAt).getTime()))
+            .sort((left, right) => right.likes - left.likes)
+            .slice(0, 5);
+          await prisma.$transaction([
+            prisma.mst_creators.update({
+              where: { id: item.creator.id },
               data: {
                 photo_url: item.photoUrl,
                 last_scraped_at: new Date(),
                 updated_at: new Date(),
               },
+            }),
+            ...validPosts.map((post) => prisma.dtl_creator_posts.upsert({
+              where: {
+                uq_creator_post: {
+                  creator_id: item.creator.id,
+                  posted_at: new Date(post.postedAt),
+                  caption: post.caption,
+                },
+              },
+              update: {
+                post_url: post.postUrl,
+                thumbnail_url: post.thumbnailUrl,
+                likes: post.likes,
+                comments: post.comments,
+                views: post.views,
+                scraped_at: new Date(),
+              },
+              create: {
+                creator_id: item.creator.id,
+                post_url: post.postUrl,
+                thumbnail_url: post.thumbnailUrl,
+                caption: post.caption,
+                likes: post.likes,
+                comments: post.comments,
+                views: post.views,
+                posted_at: new Date(post.postedAt),
+                scraped_at: new Date(),
+              },
             })),
-          );
-          updated += updates.length;
+          ]);
+          updated += 1;
+          updatedPosts += validPosts.length;
         }
       } catch (error) {
         failures.push({
@@ -88,6 +123,7 @@ export async function GET(request: Request) {
   return NextResponse.json({
     total: creators.length,
     updated,
+    updatedPosts,
     failedBatches: failures.length,
     failures,
     refreshedAt: new Date().toISOString(),

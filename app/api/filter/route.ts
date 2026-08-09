@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
 
 // /app/api/filter/route.ts atau lokasi file API Anda
 
@@ -40,7 +38,7 @@ export async function GET() {
       .map((item) => item.name);
 
     const dynamicFilters = [
-      { id: "socialMedia", label: "Social Media", options: socialMediaOptions },
+      { id: "social_media", label: "Social Media", options: socialMediaOptions },
       { id: "tier", label: "Tier", options: tierOptions },
       // Modifikasi di sini: Kirim dalam bentuk array of object { id, name }
       { id: "category", label: "Category", options: categories.map((c) => ({ id: c.id.toString(), name: c.name })) },

@@ -28,6 +28,14 @@ type Creator = {
   followersRaw: number;
 };
 
+const DEFAULT_DISCOVERY_FILTERS = [
+  { id: "social_media", label: "Social Media", options: ["Instagram", "TikTok", "YouTube", "Twitter/X"] },
+  { id: "tier", label: "Tier", options: ["Nano", "Micro", "Macro", "Mega"] },
+  { id: "category", label: "Category", options: [] },
+  { id: "city", label: "City", options: [] },
+  { id: "gender", label: "Gender", options: ["Male", "Female"] },
+];
+
 function profilePhotoSource(value: string | null): string {
   const url = String(value ?? "").trim();
   if (!url) return "/image/default-kol-avatar.png";
@@ -67,8 +75,10 @@ export default function CreatorDiscoveryPage() {
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const [filters, setFilters] = useState<Record<string, string>>({});
 
-  const [dynamicFilters, setDynamicFilters] = useState<any[]>([]);
+  const [dynamicFilters, setDynamicFilters] = useState<any[]>(DEFAULT_DISCOVERY_FILTERS);
   const [loadingFilters, setLoadingFilters] = useState(true);
+  const [filterError, setFilterError] = useState("");
+  const [filterReload, setFilterReload] = useState(0);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
@@ -111,21 +121,43 @@ export default function CreatorDiscoveryPage() {
   }, []);
 
   useEffect(() => {
+    const controller = new AbortController();
     async function loadDropdownFilters() {
-      try {
-        const res = await fetch("/api/filter");
-        if (res.ok) {
-          const data = await res.json();
-          setDynamicFilters(data);
+      setLoadingFilters(true);
+      setFilterError("");
+      let lastError: Error | null = null;
+
+      for (let attempt = 1; attempt <= 3; attempt += 1) {
+        try {
+          const res = await fetch("/api/filter", {
+            cache: "no-store",
+            signal: controller.signal,
+          });
+          const data = await res.json().catch(() => null);
+          if (!res.ok) throw new Error(data?.error ?? "Failed to load filters");
+          if (!Array.isArray(data)) throw new Error("Invalid filter response");
+          if (!controller.signal.aborted) {
+            const loadedById = new Map(data.map((filter: any) => [filter.id, filter]));
+            setDynamicFilters(DEFAULT_DISCOVERY_FILTERS.map((fallback) => {
+              const loaded = loadedById.get(fallback.id) as any;
+              return loaded ? { ...fallback, ...loaded } : fallback;
+            }));
+          }
+          return;
+        } catch (error) {
+          if (error instanceof DOMException && error.name === "AbortError") return;
+          lastError = error instanceof Error ? error : new Error("Failed to load filters");
+          if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, attempt * 600));
         }
-      } catch (error) {
-        console.error("Error fetching filters from database:", error);
-      } finally {
-        setLoadingFilters(false);
       }
+
+      if (!controller.signal.aborted) setFilterError(lastError?.message ?? "Failed to load filters");
     }
-    loadDropdownFilters();
-  }, []);
+    void loadDropdownFilters().finally(() => {
+      if (!controller.signal.aborted) setLoadingFilters(false);
+    });
+    return () => controller.abort();
+  }, [filterReload]);
 
   useEffect(() => {
     async function loadBrands() {
@@ -199,7 +231,8 @@ export default function CreatorDiscoveryPage() {
     if (
       targetFilter &&
       targetFilter.options?.some(
-        (opt: string) => opt.toLowerCase() === customValue.toLowerCase()
+        (opt: string | { id: string; name: string }) =>
+          (typeof opt === "string" ? opt : opt.name).toLowerCase() === customValue.toLowerCase()
       )
     ) {
       showAlertValidationError(
@@ -209,7 +242,7 @@ export default function CreatorDiscoveryPage() {
     }
 
     try {
-      const res = await fetch("/api/filters", {
+      const res = await fetch("/api/filter", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type: id, value: customValue }),
@@ -222,16 +255,20 @@ export default function CreatorDiscoveryPage() {
         return;
       }
 
+      const newOption = {
+        id: String(result.data.id),
+        name: String(result.data.name),
+      };
       setDynamicFilters((prevFilters) =>
         prevFilters.map((f) => {
-          if (f.id === id && !f.options.includes(customValue)) {
-            return { ...f, options: [...f.options, customValue] };
+          if (f.id === id) {
+            return { ...f, options: [...f.options, newOption] };
           }
           return f;
         })
       );
 
-      setFilters((prev) => ({ ...prev, [id]: customValue }));
+      setFilters((prev) => ({ ...prev, [id]: newOption.id }));
       setOtherInputs((prev) => ({ ...prev, [id]: "" }));
       showAlertSuccess(`"${customValue}" successfully added!`);
     } catch (error) {
@@ -509,6 +546,17 @@ export default function CreatorDiscoveryPage() {
           {loadingFilters ? (
             <div className="text-sm text-slate-400 text-center py-6 italic animate-pulse">
               Loading filters from database...
+            </div>
+          ) : filterError && dynamicFilters.length === 0 ? (
+            <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-center">
+              <p className="text-xs font-medium text-rose-700">{filterError}</p>
+              <button
+                type="button"
+                onClick={() => setFilterReload((value) => value + 1)}
+                className="mt-3 rounded-lg bg-slate-900 px-4 py-2 text-xs font-semibold text-white"
+              >
+                Try Again
+              </button>
             </div>
           ) : (
             <div className="space-y-4">

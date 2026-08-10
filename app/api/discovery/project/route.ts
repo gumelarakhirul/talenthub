@@ -30,6 +30,26 @@ export async function POST(request: Request) {
       );
     }
 
+    const parsedStartDate = new Date(startDate);
+    const parsedEndDate = new Date(endDate);
+
+    if (
+      Number.isNaN(parsedStartDate.getTime()) ||
+      Number.isNaN(parsedEndDate.getTime())
+    ) {
+      return NextResponse.json(
+        { error: "Start Date and End Date must be valid dates." },
+        { status: 400 }
+      );
+    }
+
+    if (parsedEndDate < parsedStartDate) {
+      return NextResponse.json(
+        { error: "End Date cannot be earlier than Start Date." },
+        { status: 400 }
+      );
+    }
+
     // 4. Jalankan Prisma Transaction
     const result = await prisma.$transaction(async (tx) => {
       // Langkah A: Insert ke tabel trs_project
@@ -43,8 +63,8 @@ export async function POST(request: Request) {
           prj_kode: prjKode,
           prj_brand: parseInt(brandId),
           prj_nama: projectName,
-          prj_dstartdate: new Date(startDate),
-          prj_denddate: new Date(endDate),
+          prj_dstartdate: parsedStartDate,
+          prj_denddate: parsedEndDate,
           prj_status: 1,
           creaby: usernameLogin,
           creadate: new Date(),

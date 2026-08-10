@@ -443,6 +443,11 @@ export default function CreatorDiscoveryPage() {
       return;
     }
 
+    if (endDate < startDate) {
+      showAlertValidationError("End Date cannot be earlier than Start Date.");
+      return;
+    }
+
     const selectedCreatorsData = creatorsData.filter((creator) =>
       selectedRows.includes(creator.no)
     );
@@ -1080,7 +1085,14 @@ export default function CreatorDiscoveryPage() {
                     type="date"
                     required
                     value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
+                    onChange={(e) => {
+                      const nextStartDate = e.target.value;
+                      setStartDate(nextStartDate);
+
+                      if (endDate && endDate < nextStartDate) {
+                        setEndDate("");
+                      }
+                    }}
                     className="w-full h-10 border border-slate-300 rounded-lg px-3 text-sm focus:outline-none focus:border-blue-500 bg-white text-slate-700 uppercase"
                   />
                 </div>
@@ -1092,6 +1104,7 @@ export default function CreatorDiscoveryPage() {
                     type="date"
                     required
                     value={endDate}
+                    min={startDate || undefined}
                     onChange={(e) => setEndDate(e.target.value)}
                     className="w-full h-10 border border-slate-300 rounded-lg px-3 text-sm focus:outline-none focus:border-blue-500 bg-white text-slate-700 uppercase"
                   />

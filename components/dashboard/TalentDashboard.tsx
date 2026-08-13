@@ -30,6 +30,16 @@ const profilePhotoSource = (value: string | null) => {
   return `/api/image-proxy?url=${encodeURIComponent(url)}`;
 };
 
+const emptyDashboardData: DashboardData = {
+  overview: { revenue: 0, currentMonthRevenue: 0, previousMonthRevenue: 0, revenueGrowth: null, activeProjects: 0, totalCreators: 0, outstandingCount: 0, outstandingTotal: 0 },
+  projectStatus: ["Draft", "Quotation", "Running", "Report", "Invoice", "Finish"].map((label) => ({ label, value: 0 })),
+  financial: { revenue: 0, outstandingTotal: 0, completedProjects: 0, averageProjectValue: 0 },
+  revenueTrend: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map((label) => ({ label, value: 0 })),
+  creatorStats: { byPlatform: [], newThisMonth: 0, top: [] },
+  alerts: { deadlines: [], invoices: [] },
+  clientAnalytics: { top: [], repeatRate: 0, repeatClients: 0, totalClients: 0 },
+};
+
 export default function TalentDashboard() {
   const [period, setPeriod] = useState("this_month");
   const [data, setData] = useState<DashboardData | null>(null);
@@ -61,7 +71,10 @@ export default function TalentDashboard() {
         }
       }
 
-      if (!controller.signal.aborted) setError(lastError?.message ?? "Failed to load dashboard data");
+      if (!controller.signal.aborted) {
+        setError(lastError?.message ?? "Failed to load dashboard data");
+        setData((current) => current ?? emptyDashboardData);
+      }
     };
 
     void load().finally(() => { if (!controller.signal.aborted) setLoading(false); });
@@ -75,7 +88,6 @@ export default function TalentDashboard() {
   };
 
   if (loading && !data) return <DashboardSkeleton />;
-  if (error && !data) return <ErrorState message={error} onRetry={() => setRequestVersion((value) => value + 1)} />;
   if (!data) return null;
 
   const growth = data.overview.revenueGrowth;
@@ -88,7 +100,7 @@ export default function TalentDashboard() {
         </div>
       </div>
 
-      {error ? <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">Previously loaded data is being displayed. Refresh failed: {error}</div> : null}
+      {error ? <div className="flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 sm:flex-row sm:items-center sm:justify-between"><span>Dashboard data is temporarily unavailable. Empty or previously loaded data is shown. {error}</span><button type="button" onClick={() => setRequestVersion((value) => value + 1)} className="shrink-0 rounded-lg bg-amber-900 px-4 py-2 text-xs font-semibold text-white">Try Again</button></div> : null}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <SummaryCard title="Total Revenue" value={currency(data.overview.revenue)} detail={growth === null ? "No prior-month revenue for comparison" : `${growth >= 0 ? "↑" : "↓"} ${Math.abs(growth).toLocaleString("en-US", { maximumFractionDigits: 1 })}% from the previous month`} tone={growth !== null && growth < 0 ? "rose" : "emerald"} />
@@ -143,4 +155,3 @@ function RankList({ children, empty }: { children: ReactNode; empty: string }) {
 }
 function EmptyState({ text }: { text: string }) { return <div className="flex min-h-32 items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 p-5 text-center text-sm text-slate-500">{text}</div>; }
 function DashboardSkeleton() { return <section className="space-y-6" aria-label="Loading dashboard"><div className="h-36 animate-pulse rounded-3xl bg-white/80" /><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{Array.from({ length: 4 }, (_, index) => <div key={index} className="h-40 animate-pulse rounded-2xl bg-white/80" />)}</div><div className="grid gap-6 xl:grid-cols-2"><div className="h-80 animate-pulse rounded-2xl bg-white/80" /><div className="h-80 animate-pulse rounded-2xl bg-white/80" /></div></section>; }
-function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) { return <div className="rounded-2xl border border-rose-200 bg-white p-8 text-center shadow-sm"><p className="font-bold text-rose-700">Unable to load the dashboard</p><p className="mt-2 text-sm text-slate-600">{message}</p><button onClick={onRetry} className="mt-5 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white">Try Again</button></div>; }

@@ -39,6 +39,8 @@ type Brand = {
 export default function TrackingPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
   const statuses = Array.from(
     new Set(projects.map((item) => item.status))
@@ -54,19 +56,23 @@ export default function TrackingPage() {
 }, []);
 
 const loadData = async () => {
+  setLoading(true);
+  setLoadError("");
   try {
-    const res = await fetch("/api/tracking");
+    const res = await fetch("/api/tracking", { cache: "no-store" });
+    const data = await res.json().catch(() => ({}));
 
     if (!res.ok) {
-      throw new Error("Failed to fetch data");
+      throw new Error(data.error ?? "Failed to fetch project data");
     }
 
-    const data = await res.json();
-
-    setProjects(data.projects);
-    setBrands(data.brands);
+    setProjects(Array.isArray(data.projects) ? data.projects : []);
+    setBrands(Array.isArray(data.brands) ? data.brands : []);
   } catch (err) {
     console.error(err);
+    setLoadError(err instanceof Error ? err.message : "Failed to fetch project data");
+  } finally {
+    setLoading(false);
   }
 };
 
@@ -180,6 +186,13 @@ const handleDelete = async (projectId: number) => {
           </div>
         </section>
 
+      {loadError ? (
+        <div className="flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 sm:flex-row sm:items-center sm:justify-between">
+          <span>Project data is temporarily unavailable. The Progress page remains available with empty data. {loadError}</span>
+          <button type="button" onClick={() => void loadData()} className="shrink-0 rounded-lg bg-amber-900 px-4 py-2 text-xs font-semibold text-white">Try Again</button>
+        </div>
+      ) : null}
+
       <section className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(180px,1fr))]">
       <SummaryCard
         title="DRAFT"
@@ -228,6 +241,15 @@ const handleDelete = async (projectId: number) => {
           />
         );
       })}
+      {!loading && filteredProjects.length === 0 ? (
+        <div className="col-span-full rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
+          <p className="font-semibold text-slate-700">No project data available.</p>
+          <p className="mt-2 text-sm text-slate-500">Create a project from Creator Discovery or adjust the selected filters.</p>
+        </div>
+      ) : null}
+      {loading && projects.length === 0 ? (
+        <div className="col-span-full rounded-2xl border border-slate-200 bg-white px-6 py-12 text-center text-sm text-slate-500">Loading project data...</div>
+      ) : null}
       </section>
       </div>
     </DefaultLayout>

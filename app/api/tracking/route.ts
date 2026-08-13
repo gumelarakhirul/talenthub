@@ -4,6 +4,33 @@ import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { isGoogleSheetsConfigured, syncProjectSpreadsheet } from "@/lib/google-sheets";
 
+const TRANSIENT_DATABASE_CODES = new Set(["P1001", "P1002", "P1008", "P1017", "P2024"]);
+
+function isTransientDatabaseError(error: unknown) {
+  const candidate = error as { code?: unknown; message?: unknown };
+  const code = typeof candidate?.code === "string" ? candidate.code : "";
+  const message = typeof candidate?.message === "string" ? candidate.message.toLowerCase() : "";
+  return TRANSIENT_DATABASE_CODES.has(code)
+    || message.includes("can't reach database server")
+    || message.includes("connection pool")
+    || message.includes("timed out")
+    || message.includes("connection closed");
+}
+
+async function withDatabaseRetry<T>(operation: () => Promise<T>, attempts = 3): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      if (!isTransientDatabaseError(error) || attempt === attempts) throw error;
+      await new Promise((resolve) => setTimeout(resolve, attempt * 350));
+    }
+  }
+  throw lastError;
+}
+
 async function authorize() {
   const session = await getServerSession(authOptions);
 
@@ -155,7 +182,7 @@ if (id) {
 }
 
     // ================= GET ALL =================
-    const [projects, brands] = await Promise.all([
+    const [projects, brands] = await withDatabaseRetry(() => Promise.all([
       prisma.trs_project.findMany({
         include: {
           mst_brand: true,
@@ -173,7 +200,7 @@ if (id) {
           brd_nama: "asc",
         },
       }),
-    ]);
+    ]));
 
 const result = projects.map((item) => ({
   id: item.prj_id,
@@ -196,13 +223,10 @@ const result = projects.map((item) => ({
   } catch (error) {
     console.error("GET TRACKING ERROR:", error);
 
+    const temporarilyUnavailable = isTransientDatabaseError(error);
     return NextResponse.json(
-      {
-        error: "Failed to fetch data",
-      },
-      {
-        status: 500,
-      }
+      { error: temporarilyUnavailable ? "The database is temporarily unavailable. Please try again." : "Failed to fetch project data" },
+      { status: temporarilyUnavailable ? 503 : 500, headers: temporarilyUnavailable ? { "Retry-After": "2" } : undefined }
     );
   }
 }

@@ -2,6 +2,7 @@ import { authOptions } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
+import { isSowForPlatform } from "@/lib/social-platform";
 import { calculateTaxSummary } from "@/lib/tax";
 import { getContentIdentity } from "@/lib/content-url";
 
@@ -146,6 +147,15 @@ export async function PATCH(req: Request) {
 
       if (!sow) {
         return NextResponse.json({ error: "SOW was not found" }, { status: 404 });
+      }
+
+      const detail = await prisma.dtl_project.findUnique({
+        where: { drf_id: id },
+        select: { mst_creators: { select: { social_media: true } } },
+      });
+      if (!detail) return NextResponse.json({ error: "Creator detail was not found" }, { status: 404 });
+      if (!isSowForPlatform(sow.sow_nama, detail.mst_creators.social_media)) {
+        return NextResponse.json({ error: `The selected SOW does not match the creator platform (${detail.mst_creators.social_media})` }, { status: 400 });
       }
     }
 

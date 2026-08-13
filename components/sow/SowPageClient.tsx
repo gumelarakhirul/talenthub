@@ -255,7 +255,11 @@ export default function PaymentPageClient() {
                 value={sowNama}
                 onChange={(e) => setSowNama(e.target.value)}
                 className="h-10 w-full rounded-lg border border-slate-300 px-3"
+                placeholder="Example: TikTok Video or YouTube Shorts"
               />
+              <p className="mt-2 text-xs leading-5 text-slate-500">
+                Required format: content type followed by a clear platform, for example Reels IG, TikTok Video, YouTube Shorts, or X Post.
+              </p>
             </div>
 
             {error && (

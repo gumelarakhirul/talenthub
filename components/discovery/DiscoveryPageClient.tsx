@@ -529,7 +529,7 @@ export default function CreatorDiscoveryPage() {
   };
 
   return (
-    <section className="p-6 bg-slate-50 min-h-screen relative">
+    <section className="relative min-h-screen min-w-0 bg-slate-50 p-0 sm:p-4 lg:p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-slate-900">
           {isEditMode ? "Add More Creators" : "Discovery"}
@@ -541,7 +541,7 @@ export default function CreatorDiscoveryPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-[300px_1fr] gap-6 items-start">
+      <div className="grid min-w-0 grid-cols-1 items-start gap-4 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[300px_minmax(0,1fr)] xl:gap-6">
         <div
           ref={dropdownRef}
           className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm"
@@ -702,7 +702,7 @@ export default function CreatorDiscoveryPage() {
           )}
         </div>
 
-        <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="min-w-0 overflow-hidden rounded-xl border border-gray-200 bg-white p-3 shadow-sm sm:p-5 lg:p-6">
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-gray-900">
               Result Discovery
@@ -710,7 +710,7 @@ export default function CreatorDiscoveryPage() {
             <p className="text-gray-500">Creator Found</p>
           </div>
 
-          <div className="flex items-center gap-4 mb-6">
+          <div className="mb-6 flex flex-wrap items-center gap-3 sm:gap-4">
             {selectedRows.length > 0 && (
               <div className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-medium text-sm">
                 <span>{selectedRows.length} selected</span>

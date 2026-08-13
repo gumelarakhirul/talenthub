@@ -27,15 +27,15 @@ export default function DefaultLayout({ children }: DefaultLayoutProps) {
       title: "Progress",
       description: "Monitor project campaign progress from draft to finish",
     }
-  : pathname.includes("/influencer")
+  : pathname.includes("/discovery")
   ? {
-      title: "Influencer",
-      description: "Manage influencers and campaign collaborations",
+      title: "Creator Discovery",
+      description: "Discover the right creators for your campaigns",
     }
-  : pathname.includes("/operational")
+  : ["/users", "/payment", "/sow", "/brand", "/dbest"].some((path) => pathname.startsWith(path))
   ? {
-      title: "Operational",
-      description: "Manage operational activities and workflows",
+      title: "Master Data",
+      description: "Manage the reference data used throughout Talent Hub",
     }
   : {
       title: "Home",
@@ -107,7 +107,7 @@ export default function DefaultLayout({ children }: DefaultLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#dbeafe_0%,_#eff6ff_35%,_#f8fafc_100%)]">
+    <div className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top,_#dbeafe_0%,_#eff6ff_35%,_#f8fafc_100%)]">
       <Sidebar
         collapsed={collapsed}
         mobileOpen={mobileOpen}
@@ -115,31 +115,31 @@ export default function DefaultLayout({ children }: DefaultLayoutProps) {
         onCloseMobile={() => setMobileOpen(false)}
       />
 
-     <div className={`transition-[margin] duration-300 ml-20`}>
-        <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/70 px-4 py-7 backdrop-blur md:px-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+     <div className={`min-w-0 transition-[margin,width] duration-300 md:ml-20 md:w-[calc(100%-5rem)] ${mobileOpen ? "ml-20 w-[calc(100%-5rem)]" : "ml-0 w-full"}`}>
+        <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/85 px-3 py-4 backdrop-blur sm:px-4 sm:py-5 md:px-8 md:py-7">
+          <div className="flex min-w-0 items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
               <button
                 type="button"
-                onClick={() => setMobileOpen(true)}
-                className="rounded-lg border border-slate-300 bg-white p-2 text-slate-700 transition hover:bg-slate-50 md:hidden"
-                aria-label="Open sidebar"
+                onClick={() => setMobileOpen((current) => !current)}
+                className="shrink-0 rounded-lg border border-slate-300 bg-white p-2 text-slate-700 transition hover:bg-slate-50 md:hidden"
+                aria-label={mobileOpen ? "Close sidebar" : "Open sidebar"}
               >
                 <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
                   <path d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               </button>
-              <div>
-                <p className="text-sm font-bold text-slate-900">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-bold text-slate-900">
                   {currentPage.title}
                 </p>
 
-                <p className="text-xs text-slate-500">
+                <p className="line-clamp-2 text-xs text-slate-500 sm:line-clamp-1">
                   {currentPage.description}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex shrink-0 items-center gap-3">
             
 
               <div className="relative" ref={profileRef}>
@@ -156,7 +156,7 @@ export default function DefaultLayout({ children }: DefaultLayoutProps) {
                 </button>
 
                 {profileOpen && (
-                  <div className="absolute right-0 top-14 w-72 rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.14)]">
+                  <div className="fixed inset-x-3 top-20 rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.14)] sm:absolute sm:inset-x-auto sm:right-0 sm:top-14 sm:w-72">
                     <div className="flex flex-col items-center text-center">
                       <div className="flex h-16 w-16 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-500">
                         <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -189,7 +189,7 @@ export default function DefaultLayout({ children }: DefaultLayoutProps) {
           </div>
         </header>
 
-        <main className="px-4 py-6 md:px-8">{children}</main>
+        <main className="min-w-0 px-3 py-4 sm:px-4 sm:py-6 md:px-8">{children}</main>
 
         {accessToastVisible ? (
           <div className="pointer-events-none fixed bottom-4 right-4 z-[70] max-w-sm rounded-2xl border border-rose-200 bg-rose-50/95 px-4 py-3 text-rose-700 shadow-[0_18px_50px_rgba(15,23,42,0.14)] backdrop-blur">

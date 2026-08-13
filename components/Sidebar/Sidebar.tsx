@@ -242,7 +242,7 @@ export default function Sidebar({
   return (
     <>
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-20 border-r border-slate-100 bg-white text-slate-600 transition-transform duration-300 md:z-40 md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-20 border-r border-slate-100 bg-white text-slate-600 shadow-lg transition-transform duration-300 md:z-40 md:translate-x-0 md:shadow-none ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -302,7 +302,7 @@ export default function Sidebar({
                             <Link
                               key={sub.href}
                               href={sub.href}
-                              onClick={() => setOpenSubMenu(null)}
+                              onClick={() => { setOpenSubMenu(null); onCloseMobile(); }}
                               className={`block px-4 py-2 text-xs transition ${
                                 isSubItemActive
                                   ? "text-[#F4AC39] font-bold bg-slate-50"
@@ -356,14 +356,6 @@ export default function Sidebar({
         </div>
       </aside>
 
-      {mobileOpen && (
-        <button
-          type="button"
-          onClick={onCloseMobile}
-          className="fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-[1px] md:hidden"
-          aria-label="Close sidebar overlay"
-        />
-      )}
     </>
   );
 }

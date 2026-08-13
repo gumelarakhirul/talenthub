@@ -142,7 +142,7 @@ function ReportCard({ item, loading }: { item: Item; loading: boolean }) {
       </div>
       {!item.contentUrl ? <p className="rounded-xl bg-amber-50 p-4 text-amber-800">URL Content has not been entered.</p> : !report ?
         <p className="rounded-xl bg-slate-50 p-4 text-slate-500">{loading ? 'Fetching metadata from URL...' : 'Metadata is not available.'}</p> :
-        <div className="grid items-start gap-6 lg:grid-cols-[320px_1fr]">
+        <div className="grid min-w-0 items-start gap-6 lg:grid-cols-[minmax(240px,320px)_minmax(0,1fr)]">
           <a href={item.contentUrl} target="_blank" rel="noreferrer" className="group relative flex min-h-72 self-start items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-2">
             <img src={thumbnailSource(report.thumbnail_url, fallbackImage)} alt={`Content by ${item.creatorName}`}
               data-fallback={fallbackImage}

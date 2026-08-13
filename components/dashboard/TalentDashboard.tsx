@@ -96,7 +96,7 @@ export default function TalentDashboard() {
       <div className="rounded-3xl border border-slate-200 bg-white/90 p-5 shadow-sm sm:p-7">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div><p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-600">Executive Dashboard</p><h1 className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">Talent Hub Performance Overview</h1><p className="mt-2 text-sm text-slate-600">A consolidated view of campaign operations, creator performance, and financial health.</p></div>
-          <label className="text-sm font-semibold text-slate-700">Period<select value={period} disabled={loading} onChange={(event) => changePeriod(event.target.value)} className="ml-3 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium outline-none focus:border-sky-500 disabled:cursor-wait disabled:opacity-60">{periods.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+          <label className="flex w-full flex-col gap-2 text-sm font-semibold text-slate-700 sm:w-auto sm:flex-row sm:items-center">Period<select value={period} disabled={loading} onChange={(event) => changePeriod(event.target.value)} className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium outline-none focus:border-sky-500 disabled:cursor-wait disabled:opacity-60 sm:w-auto">{periods.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
         </div>
       </div>
 

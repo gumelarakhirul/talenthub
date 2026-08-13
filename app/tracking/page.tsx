@@ -193,7 +193,7 @@ const handleDelete = async (projectId: number) => {
         </div>
       ) : null}
 
-      <section className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(180px,1fr))]">
+      <section className="grid grid-cols-1 gap-4 min-[420px]:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
       <SummaryCard
         title="DRAFT"
         value={summary.Draft.toString()}

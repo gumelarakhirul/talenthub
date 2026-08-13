@@ -32,7 +32,7 @@ type AutoSubmitReportFiltersProps = {
 export default function AutoSubmitReportFilters({
   selectedFilter,
   filterOptions,
-  className = "grid gap-3 sm:grid-cols-3 xl:min-w-[560px]",
+  className = "grid w-full min-w-0 gap-3 sm:grid-cols-3 xl:min-w-[560px]",
 }: AutoSubmitReportFiltersProps) {
   const router = useRouter();
   const pathname = usePathname();

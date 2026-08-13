@@ -121,6 +121,8 @@ export default function QuotationSection({
 
     const brown: [number, number, number] = [205, 159, 126];
     const black: [number, number, number] = [0, 0, 0];
+    const companyName = String(projectDetail?.dbest?.name ?? "").trim() || "-";
+    const companyAddress = String(projectDetail?.dbest?.address ?? "").trim() || "-";
 
     const formatRupiah = (value: number | null | undefined) =>
       Number(value ?? 0).toLocaleString("en-US");
@@ -138,24 +140,20 @@ export default function QuotationSection({
       doc.setTextColor(...black);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(11);
-      doc.text("D'BEST INFLUENCE", contentLeft, 16);
+      doc.text(companyName.toUpperCase(), contentLeft, 16);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
-      doc.text("Ruko Permata Regency D/37", contentLeft, 22);
-      doc.text("Kembangan, Jakarta Barat 11510", contentLeft, 27);
-      doc.text("0811 - 1262 - 726", contentLeft, 32);
+      const addressLines = doc.splitTextToSize(companyAddress, 82).slice(0, 3);
+      addressLines.forEach((line: string, index: number) => doc.text(line, contentLeft, 22 + index * 5));
 
       // LOGO AREA
       doc.setDrawColor(190, 150, 120);
       doc.setLineWidth(0.4);
       doc.circle(160, 23, 14);
       doc.setFont("times", "bold");
-      doc.setFontSize(14);
+      doc.setFontSize(9);
       doc.setTextColor(150, 110, 85);
-      doc.text("D'BEST", 160, 22, { align: "center" });
-      doc.setFont("times", "italic");
-      doc.setFontSize(8);
-      doc.text("Influence", 160, 27, { align: "center" });
+      doc.text(doc.splitTextToSize(companyName, 24).slice(0, 2), 160, 21, { align: "center" });
 
       // QUOTATION INFO
       doc.setTextColor(...black);

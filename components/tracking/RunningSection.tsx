@@ -24,6 +24,7 @@ type RunningProject = {
   createdBy?: string | null;
   runningStartDate?: string | Date | null;
   runningEndDate?: string | Date | null;
+  dbest?: { name?: string | null; address?: string | null } | null;
 };
 
 type Props = {
@@ -60,6 +61,8 @@ export default function RunningSection({
     const left = 16;
     const brown: [number, number, number] = [205, 159, 126];
     const black: [number, number, number] = [0, 0, 0];
+    const companyName = String(projectDetail?.dbest?.name ?? "").trim() || "-";
+    const companyAddress = String(projectDetail?.dbest?.address ?? "").trim() || "-";
 
     const drawBorder = () => {
       doc.setDrawColor(...black);
@@ -75,23 +78,17 @@ export default function RunningSection({
     doc.setTextColor(...black);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
-    doc.text("PT DUTA KARYARAYA MANDIRI", left, 16);
+    doc.text(companyName.toUpperCase(), left, 16);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
-    doc.text("Ruko Permata Regency D/37", left, 22);
-    doc.text("Jl Haji Kelik RT 001 RW 006", left, 27);
-    doc.text("Jakarta Barat - DKI Jakarta", left, 32);
-    doc.text("+62 818 693 309", left, 37);
+    doc.splitTextToSize(companyAddress, 95).slice(0, 3).forEach((line: string, index: number) => doc.text(line, left, 22 + index * 5));
 
     doc.setDrawColor(190, 150, 120);
     doc.circle(pageWidth - 39, 23, 14);
     doc.setFont("times", "bold");
-    doc.setFontSize(14);
+    doc.setFontSize(9);
     doc.setTextColor(150, 110, 85);
-    doc.text("D'BEST", pageWidth - 39, 22, { align: "center" });
-    doc.setFont("times", "italic");
-    doc.setFontSize(8);
-    doc.text("Influence", pageWidth - 39, 27, { align: "center" });
+    doc.text(doc.splitTextToSize(companyName, 24).slice(0, 2), pageWidth - 39, 21, { align: "center" });
 
     doc.setTextColor(...black);
     doc.setFont("helvetica", "bold");

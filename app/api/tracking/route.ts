@@ -110,15 +110,16 @@ export async function GET(request: Request) {
 
 // ================= GET DETAIL =================
 if (id) {
-  const project = await prisma.trs_project.findUnique({
-    where: {
-      prj_id: Number(id),
-    },
-    include: {
-      mst_brand: true,
-      mst_payment: true,
-    },
-  });
+  const [project, dbest] = await withDatabaseRetry(() => Promise.all([
+    prisma.trs_project.findUnique({
+      where: { prj_id: Number(id) },
+      include: { mst_brand: true, mst_payment: true },
+    }),
+    prisma.mst_dbest.findFirst({
+      where: { bst_status: 1 },
+      orderBy: { bst_id: "desc" },
+    }),
+  ]));
 
   if (!project) {
     return NextResponse.json(
@@ -154,6 +155,9 @@ if (id) {
           accountNo: project.mst_payment.pyt_norek,
           accountName: project.mst_payment.pyt_nama,
         }
+      : null,
+    dbest: dbest
+      ? { name: dbest.bst_nama ?? "", address: dbest.bst_alamat ?? "" }
       : null,
 
     draftStartDate: project.prj_dstartdate,

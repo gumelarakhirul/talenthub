@@ -28,7 +28,7 @@ type ReportItem = {
 };
 
 export type DetailReportPayload = {
-  project: { id: number; code: string; brand: string | null; name: string; pic: string; date: string | null };
+  project: { id: number; code: string; brand: string | null; name: string; pic: string; date: string | null; dbest?: { name: string; address: string } | null };
   items: ReportItem[];
 };
 
@@ -70,7 +70,7 @@ function decorations(doc: jsPDF) {
   doc.ellipse(width - 15, height + 2, 28, 22, 'F');
 }
 
-function footer(doc: jsPDF, page: number) {
+function footer(doc: jsPDF, page: number, companyName: string) {
   const width = doc.internal.pageSize.getWidth();
   const height = doc.internal.pageSize.getHeight();
   doc.setFont('helvetica', 'normal');
@@ -78,12 +78,16 @@ function footer(doc: jsPDF, page: number) {
   doc.setTextColor(100, 116, 125);
   doc.text('D\'BEST Influence · KOL Performance Report', 18, height - 7);
   doc.text(String(page), width - 18, height - 7, { align: 'right' });
+  doc.setFillColor(...PAPER);
+  doc.rect(16, height - 11, 120, 7, 'F');
+  doc.setTextColor(100, 116, 125);
+  doc.text(`${companyName} - KOL Performance Report`, 18, height - 7);
 }
 
-function addPage(doc: jsPDF, page: number) {
+function addPage(doc: jsPDF, page: number, companyName: string) {
   if (page > 1) doc.addPage();
   decorations(doc);
-  footer(doc, page);
+  footer(doc, page, companyName);
 }
 
 async function imageData(url: string | null): Promise<{ data: string; width: number; height: number } | null> {
@@ -460,9 +464,10 @@ export async function createDetailReportPdf(payload: DetailReportPayload) {
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   const width = doc.internal.pageSize.getWidth();
   const reportItems = payload.items.filter((item) => item.report);
+  const companyName = String(payload.project.dbest?.name ?? '').trim() || '-';
   let page = 1;
 
-  addPage(doc, page);
+  addPage(doc, page, companyName);
   doc.setTextColor(...NAVY);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(32);
@@ -471,20 +476,17 @@ export async function createDetailReportPdf(payload: DetailReportPayload) {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(12);
   doc.text(`Project ${payload.project.code}`, 18, 145);
-  doc.text(`Prepared by ${payload.project.pic || "D'BEST Influence"}`, 18, 154);
+  doc.text(`Prepared by ${payload.project.pic || companyName}`, 18, 154);
   doc.setDrawColor(190, 150, 120);
   doc.setLineWidth(0.7);
   doc.circle(width - 52, 145, 18);
   doc.setFont('times', 'bold');
-  doc.setFontSize(15);
+  doc.setFontSize(9);
   doc.setTextColor(151, 109, 80);
-  doc.text("D'BEST", width - 52, 144, { align: 'center' });
-  doc.setFont('times', 'italic');
-  doc.setFontSize(8);
-  doc.text('Influence', width - 52, 150, { align: 'center' });
+  doc.text(doc.splitTextToSize(companyName, 30).slice(0, 2), width - 52, 143, { align: 'center' });
 
   page++;
-  addPage(doc, page);
+  addPage(doc, page, companyName);
   title(doc, 'Campaign Overview');
   const totalViews = reportItems.reduce((sum, item) => sum + (item.report?.views ?? 0), 0);
   const totalEngagement = reportItems.reduce((sum, item) => sum + (item.report?.likes ?? 0) +
@@ -511,7 +513,7 @@ export async function createDetailReportPdf(payload: DetailReportPayload) {
   });
 
   page++;
-  addPage(doc, page);
+  addPage(doc, page, companyName);
   title(doc, 'Campaign Performance Overview');
   autoTable(doc, {
     startY: 40,
@@ -528,7 +530,7 @@ export async function createDetailReportPdf(payload: DetailReportPayload) {
 
   for (const item of reportItems) {
     page++;
-    addPage(doc, page);
+    addPage(doc, page, companyName);
     const mappedPlatform = normalizePlatform(item.platform);
     if (mappedPlatform) {
       await shortVideoInsightsPage(doc, item);

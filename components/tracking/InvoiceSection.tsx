@@ -97,6 +97,8 @@ export default function InvoiceSection({
     const right = pageWidth - 16;
     const tableRight = pageWidth - 7;
     const black: [number, number, number] = [0, 0, 0];
+    const companyName = String(projectDetail?.dbest?.name ?? "").trim() || "-";
+    const companyAddress = String(projectDetail?.dbest?.address ?? "").trim() || "-";
 
     const drawPageDecoration = () => {
       doc.setFillColor(250, 224, 210);
@@ -107,9 +109,7 @@ export default function InvoiceSection({
     doc.setTextColor(...black);
     doc.setFont("times", "bolditalic");
     doc.setFontSize(18);
-    doc.text("D'BEST", 8, 20);
-    doc.setFontSize(8);
-    doc.text("Influence", 19, 24, { align: "center" });
+    doc.text(companyName, 8, 20);
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
@@ -165,10 +165,9 @@ export default function InvoiceSection({
     doc.text("From", fromX, 36, { align: "center" });
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8.5);
-    doc.text("D'BEST-INFLUENCE", fromX, 41, { align: "center" });
-    doc.text("0811 - 1262 - 726", fromX, 46, { align: "center" });
-    doc.text("Ruko Permata Regency D/37", fromX, 53, { align: "center" });
-    doc.text("Kembangan, Jakarta Barat 11510", fromX, 58, { align: "center" });
+    doc.text(companyName, fromX, 41, { align: "center" });
+    const companyAddressLines = doc.splitTextToSize(companyAddress, 56).slice(0, 3);
+    companyAddressLines.forEach((line: string, index: number) => doc.text(line, fromX, 48 + index * 5, { align: "center" }));
 
     const invoiceRows = creators.map((creator, index) => [
       index + 1,

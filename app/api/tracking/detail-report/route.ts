@@ -102,13 +102,12 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Invalid project ID' }, { status: 400 });
   }
 
-  const [project, rows, dbest] = await Promise.all([
+  const [project, rows] = await Promise.all([
     prisma.trs_project.findUnique({
       where: { prj_id: projectId },
-      include: { mst_brand: true },
+      include: { mst_brand: true, mst_dbest: true },
     }),
     getRows(projectId, detailIds),
-    prisma.mst_dbest.findFirst({ where: { bst_status: 1 }, orderBy: { bst_id: 'desc' } }),
   ]);
   if (!project) return NextResponse.json({ error: 'Project was not found' }, { status: 404 });
 
@@ -116,7 +115,7 @@ export async function GET(request: Request) {
     project: {
       id: project.prj_id, code: project.prj_kode, brand: project.mst_brand.brd_nama,
       name: project.prj_nama, pic: project.creaby, date: project.prj_renddate,
-      dbest: dbest ? { name: dbest.bst_nama ?? '', address: dbest.bst_alamat ?? '' } : null,
+      dbest: project.mst_dbest ? { name: project.mst_dbest.bst_nama ?? '', address: project.mst_dbest.bst_alamat ?? '' } : null,
     },
     items: rows.map(serialize),
   });

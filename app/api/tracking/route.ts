@@ -110,16 +110,12 @@ export async function GET(request: Request) {
 
 // ================= GET DETAIL =================
 if (id) {
-  const [project, dbest] = await withDatabaseRetry(() => Promise.all([
+  const project = await withDatabaseRetry(() =>
     prisma.trs_project.findUnique({
       where: { prj_id: Number(id) },
-      include: { mst_brand: true, mst_payment: true },
-    }),
-    prisma.mst_dbest.findFirst({
-      where: { bst_status: 1 },
-      orderBy: { bst_id: "desc" },
-    }),
-  ]));
+      include: { mst_brand: true, mst_payment: true, mst_dbest: true },
+    })
+  );
 
   if (!project) {
     return NextResponse.json(
@@ -156,8 +152,8 @@ if (id) {
           accountName: project.mst_payment.pyt_nama,
         }
       : null,
-    dbest: dbest
-      ? { name: dbest.bst_nama ?? "", address: dbest.bst_alamat ?? "" }
+    dbest: project.mst_dbest
+      ? { name: project.mst_dbest.bst_nama ?? "", address: project.mst_dbest.bst_alamat ?? "" }
       : null,
 
     draftStartDate: project.prj_dstartdate,
@@ -251,11 +247,15 @@ const body = await request.json();
 
 const projectCode = await generateProjectCode();
 
+const activeDbest = await prisma.mst_dbest.findFirst({ where: { bst_status: 1 }, orderBy: { bst_id: "desc" }, select: { bst_id: true } });
+if (!activeDbest) return NextResponse.json({ error: "Configure an active DBest identity in Master Data before creating a project." }, { status: 400 });
+
 const project = await prisma.trs_project.create({
   data: {
     prj_kode: projectCode,
 
     prj_brand: Number(body.prj_brand),
+    prj_dbestid: activeDbest.bst_id,
     prj_nama: body.prj_nama,
     prj_quotationno: body.prj_quotationno ?? projectCode.replace(/^TRS-/i, "QUO-"),
     prj_invoiceno: body.prj_invoiceno ?? projectCode.replace(/^TRS-/i, "INV-"),

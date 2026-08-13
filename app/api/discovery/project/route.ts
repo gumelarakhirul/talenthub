@@ -52,6 +52,14 @@ export async function POST(request: Request) {
 
     // 4. Jalankan Prisma Transaction
     const result = await prisma.$transaction(async (tx) => {
+      const activeDbest = await tx.mst_dbest.findFirst({
+        where: { bst_status: 1 },
+        orderBy: { bst_id: "desc" },
+        select: { bst_id: true },
+      });
+      if (!activeDbest) {
+        throw new Error("Configure an active DBest identity in Master Data before creating a project.");
+      }
       // Langkah A: Insert ke tabel trs_project
       // Kode unik: tahun + timestamp, jauh lebih aman dari collision dibanding random 4 digit
       const prjKode = `PRJ-${new Date().getFullYear()}-${Date.now()
@@ -62,6 +70,7 @@ export async function POST(request: Request) {
         data: {
           prj_kode: prjKode,
           prj_brand: parseInt(brandId),
+          prj_dbestid: activeDbest.bst_id,
           prj_nama: projectName,
           prj_dstartdate: parsedStartDate,
           prj_denddate: parsedEndDate,

@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useSyncExternalStore, useEffect, useRef } from "react";
+import Image from "next/image";
 
 type SidebarProps = {
   collapsed: boolean;
@@ -248,8 +249,14 @@ export default function Sidebar({
       >
         <div className="flex h-full flex-col items-center">
           <div className="flex items-center justify-center py-6">
-          <p className="text-2xl font-bold text-black [text-shadow:_0_1px_0_rgb(0_0_0),_1px_0_0_rgb(0_0_0)]">TH</p>
-          </div>
+  <Image
+    src="/image/talenthub1.png"
+    alt="TalentHub"
+    width={38}
+    height={38}
+    className="object-contain"
+  />
+</div>
 
           <nav className="flex-1 w-full flex flex-col items-center gap-1 px-2">
             {visibleMenuItems.map((item) => {

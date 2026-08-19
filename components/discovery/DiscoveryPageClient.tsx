@@ -29,7 +29,7 @@ type Creator = {
 };
 
 const DEFAULT_DISCOVERY_FILTERS = [
-  { id: "social_media", label: "Social Media", options: ["Instagram", "TikTok", "YouTube", "Twitter/X"] },
+  { id: "social_media", label: "Social Media", options: ["Instagram", "TikTok"] },
   { id: "tier", label: "Tier", options: ["Nano", "Micro", "Macro", "Mega"] },
   { id: "category", label: "Category", options: [] },
   { id: "city", label: "City", options: [] },

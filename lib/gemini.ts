@@ -3,7 +3,6 @@ import type { RawPost } from "./apify";
 
 // ============================================================================
 // ROTASI MULTI-API-KEY GEMINI
-// ============================================================================
 
 const GEMINI_API_KEYS = (process.env.GEMINI_API_KEYS ?? "")
   .split(",")
@@ -57,9 +56,7 @@ async function callModel(
     .trim();
 }
 
-// Coba semua model di MODEL_CANDIDATES pakai API KEY YANG SEDANG AKTIF.
-// Dipangkas jadi CUMA 1x percobaan per model (tanpa retry-tunggu), supaya
-// begitu kena 429, langsung pindah/gagal cepat — tidak buang waktu nunggu
+// Coba semua model di MODEL_CANDIDATES pakai API KEY YANG SEDANG AKTIF
 // 10-15 detik per percobaan kalau memang kuotanya lagi habis semua.
 async function tryAllModelsWithCurrentKey(
   prompt: string,

@@ -170,6 +170,7 @@ if (id) {
     invoiceEndDate: project.prj_ienddate,
     finishDate: project.prj_ienddate,
     status: getProjectStatus(project.prj_status),
+    statusId: project.prj_status,
 
     createdBy: project.creaby,
     createdAt: project.creadate,
@@ -211,6 +212,7 @@ const result = projects.map((item) => ({
   date: item.creadate,
   projectDate: item.prj_dstartdate,
   status: getProjectStatus(item.prj_status),
+  statusId: item.prj_status,
 }));
 
     return NextResponse.json({

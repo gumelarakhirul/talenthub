@@ -603,9 +603,13 @@ export default function CreatorTable({
             ) : null}
             {showDelete ? (
               <button
+                type="button"
+                aria-label={`Delete ${creator.name} from draft`}
+                title="Delete creator"
                 onClick={() => {
                   if (onDelete) onDelete(creator.drf_id);
                 }}
+                className="rounded-md p-1 hover:bg-red-50"
               >
                 <DeleteIcon className="h-5 w-5 text-red-500" />
               </button>

@@ -106,7 +106,7 @@ export default function DraftSection({
             creators={creators}
             handleSort={handleSort}
             getSortIcon={getSortIcon}
-            showDelete={!readOnly && (!projectDetail?.status || projectDetail.status === "Draft")}
+            showDelete={!readOnly && Number(projectDetail?.statusId) === 1}
             onDelete={handleDelete}
             showView={showView}
             onView={onView}

@@ -381,6 +381,15 @@ export async function DELETE(req: Request) {
       );
     }
 
+    const detail = await prisma.dtl_project.findUnique({
+      where: { drf_id: id },
+      select: { trs_project: { select: { prj_status: true } } },
+    });
+    if (!detail) return NextResponse.json({ error: "Creator detail was not found" }, { status: 404 });
+    if (detail.trs_project.prj_status !== 1) {
+      return NextResponse.json({ error: "Creators can only be removed while the project is Draft" }, { status: 409 });
+    }
+
     await prisma.dtl_project.delete({
       where: {
         drf_id: id,

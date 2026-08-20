@@ -569,8 +569,8 @@ export default function CreatorTable({
           </>
         ) : null}
 
-        <td className="p-3 text-center whitespace-nowrap sticky right-0 bg-white">
-          <div className="flex justify-center gap-3">
+        <td className="sticky right-0 min-w-[220px] whitespace-nowrap bg-white p-3 text-center">
+          <div className="flex flex-nowrap items-center justify-center gap-2">
             {draftPricingMode && draftPricingEditable && onAddSow ? (
               <button
                 type="button"
@@ -609,7 +609,7 @@ export default function CreatorTable({
                 onClick={() => {
                   if (onDelete) onDelete(creator.drf_id);
                 }}
-                className="rounded-md p-1 hover:bg-red-50"
+                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-red-200 bg-red-50 hover:bg-red-100"
               >
                 <DeleteIcon className="h-5 w-5 text-red-500" />
               </button>
@@ -681,7 +681,7 @@ export default function CreatorTable({
                   </div>
                 </th>
               ))}
-              <th className="p-3 border-r border-gray-200 font-semibold text-gray-700 whitespace-nowrap bg-gray-100 sticky right-0">
+              <th className="sticky right-0 min-w-[220px] whitespace-nowrap border-r border-gray-200 bg-gray-100 p-3 font-semibold text-gray-700">
                 Action Detail
               </th>
             </tr>

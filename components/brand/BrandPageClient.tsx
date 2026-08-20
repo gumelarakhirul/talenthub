@@ -61,7 +61,7 @@ export default function BrandPageClient() {
     const data = await res.json();
 
     if (!res.ok) {
-      throw new Error(data.error ?? "Gagal mengambil data payment");
+      throw new Error(data.error ?? "Failed to load brands");
     }
 
     setBrands(data);
@@ -110,7 +110,7 @@ export default function BrandPageClient() {
 
     // Validasi field wajib (sesuaikan dengan kebutuhan Anda, misal brd_nama wajib)
     if (!brdNama) {
-      showToast("error", "Nama Brand wajib diisi");
+      showToast("error", "Brand name is required");
       return;
     }
 
@@ -150,7 +150,7 @@ export default function BrandPageClient() {
 
       showToast(
         "success",
-        isEditing ? "Brand berhasil diperbarui" : "Brand berhasil ditambahkan"
+        isEditing ? "Brand updated successfully" : "Brand added successfully"
       );
     } catch (err) {
       showToast(
@@ -163,7 +163,7 @@ export default function BrandPageClient() {
   }
 
   async function handleDelete(id: number) {
-    const result = await confirmDelete("Hapus Brand?");
+    const result = await confirmDelete("Delete Brand?");
 
     if (!result.isConfirmed) return;
 
@@ -177,7 +177,7 @@ export default function BrandPageClient() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error ?? "Gagal menghapus brand");
+        throw new Error(data.error ?? "Failed to delete brand");
       }
 
       if (editingId === id) {
@@ -186,7 +186,7 @@ export default function BrandPageClient() {
 
       await fetchBrands();
 
-      showToast("success", "Brand berhasil dihapus");
+      showToast("success", "Brand deleted successfully");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Terjadi kesalahan";
 
@@ -294,7 +294,7 @@ export default function BrandPageClient() {
 
             <div></div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-3 sm:grid-cols-2">
               <input
                 type="text"
                 placeholder="Initial"
@@ -304,7 +304,7 @@ export default function BrandPageClient() {
               />
               <input
                 type="text"
-                placeholder="Nama Brand"
+                placeholder="Brand Name"
                 value={brdNama}
                 onChange={(e) => setBrdNama(e.target.value)}
                 className="h-10 w-full rounded-lg border border-slate-300 px-3"
@@ -313,7 +313,7 @@ export default function BrandPageClient() {
 
             <input
               type="text"
-              placeholder="Alamat"
+              placeholder="Address"
               value={brdAlamat}
               onChange={(e) => setBrdAlamat(e.target.value)}
               className="h-10 w-full rounded-lg border border-slate-300 px-3"
@@ -333,7 +333,7 @@ export default function BrandPageClient() {
               className="h-10 w-full rounded-lg border border-slate-300 px-3"
             />
 
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid gap-2 sm:grid-cols-3">
               <input
                 type="text"
                 placeholder="PIC 1"
@@ -557,7 +557,7 @@ export default function BrandPageClient() {
               </div>
               <div>
                 <p className="text-sm font-semibold">
-                  {toast.type === "success" ? "Berhasil" : "Gagal"}
+                  {toast.type === "success" ? "Success" : "Error"}
                 </p>
                 <p className="mt-1 text-sm">{toast.message}</p>
               </div>

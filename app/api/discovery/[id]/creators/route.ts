@@ -62,7 +62,7 @@ export async function POST(
 
     if (newCreators.length === 0) {
       return NextResponse.json(
-        { error: "Semua creator yang dipilih sudah ada di project ini." },
+        { error: "All selected creators are already in this project." },
         { status: 400 }
       );
     }

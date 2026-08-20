@@ -28,7 +28,7 @@ export async function PUT(req: Request, context: RouteContext) {
     return NextResponse.json(payment);
   } catch (error) {
     return NextResponse.json(
-      { error: "Gagal update payment" },
+      { error: "Failed to update payment account" },
       { status: 500 }
     );
   }
@@ -57,13 +57,13 @@ export async function DELETE(_: Request, context: RouteContext) {
 
     return NextResponse.json({
       success: true,
-      message: "Payment berhasil dinonaktifkan",
+      message: "Payment account deactivated successfully",
     });
   } catch (error) {
     console.error("DELETE PAYMENT ERROR:", error);
 
     return NextResponse.json(
-      { error: "Gagal menghapus payment" },
+      { error: "Failed to delete payment account" },
       { status: 500 }
     );
   }

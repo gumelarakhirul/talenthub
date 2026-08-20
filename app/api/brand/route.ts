@@ -16,7 +16,7 @@ export async function GET() {
     return NextResponse.json(brands);
   } catch (error) {
     console.error("GET BRAND ERROR:", error);
-    return NextResponse.json({ error: "Gagal mengambil data" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to load brands" }, { status: 500 });
   }
 }
 
@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { brd_initial, brd_nama, brd_alamat, brd_email, brd_notelp, brd_pic1, brd_pic2, brd_pic3 } = body;
 
-    if (!brd_nama) return NextResponse.json({ error: "Nama Brand wajib diisi" }, { status: 400 });
+    if (!brd_nama) return NextResponse.json({ error: "Brand name is required" }, { status: 400 });
 
     const brand = await prisma.mst_brand.create({
       data: {
@@ -47,6 +47,6 @@ export async function POST(req: Request) {
 
     return NextResponse.json(brand, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ error: "Gagal membuat brand" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to create brand" }, { status: 500 });
   }
 }

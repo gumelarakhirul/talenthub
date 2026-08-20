@@ -27,7 +27,7 @@ export async function GET() {
     console.error("GET PAYMENT ERROR:", error);
 
     return NextResponse.json(
-      { error: "Gagal mengambil data" },
+      { error: "Failed to load payment accounts" },
       { status: 500 }
     );
   }
@@ -43,7 +43,7 @@ export async function POST(req: Request) {
     const { pyt_bank, pyt_norek, pyt_nama } = body;
 
     if (!pyt_bank || !pyt_norek || !pyt_nama) {
-      return NextResponse.json({ error: "Data wajib diisi" }, { status: 400 });
+      return NextResponse.json({ error: "All payment fields are required" }, { status: 400 });
     }
 
     const payment = await prisma.mst_payment.create({
@@ -59,7 +59,7 @@ export async function POST(req: Request) {
     return NextResponse.json(payment, { status: 201 });
   } catch (error) {
     return NextResponse.json(
-      { error: "Gagal membuat payment" },
+      { error: "Failed to create payment account" },
       { status: 500 }
     );
   }

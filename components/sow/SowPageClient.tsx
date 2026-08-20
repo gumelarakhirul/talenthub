@@ -53,7 +53,7 @@ export default function PaymentPageClient() {
     const data = await res.json();
 
     if (!res.ok) {
-      throw new Error(data.error ?? "Gagal mengambil data payment");
+      throw new Error(data.error ?? "Failed to load SOW data");
     }
 
     setSows(data);
@@ -101,7 +101,7 @@ export default function PaymentPageClient() {
     e.preventDefault();
 
     if (!sowNama) {
-      showToast("error", "Semua field wajib diisi");
+      showToast("error", "All fields are required");
       return;
     }
 
@@ -134,7 +134,7 @@ export default function PaymentPageClient() {
 
       showToast(
         "success",
-        isEditing ? "SOW berhasil diupdate" : "SOW berhasil ditambahkan"
+        isEditing ? "SOW updated successfully" : "SOW added successfully"
       );
     } catch (err) {
       showToast("error", err instanceof Error ? err.message : "Error");
@@ -144,7 +144,7 @@ export default function PaymentPageClient() {
   }
 
   async function handleDelete(id: number) {
-    const result = await confirmDelete("Hapus SOW?");
+    const result = await confirmDelete("Delete SOW?");
 
     if (!result.isConfirmed) return;
 
@@ -158,7 +158,7 @@ export default function PaymentPageClient() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error ?? "Gagal menghapus SOW");
+        throw new Error(data.error ?? "Failed to delete SOW");
       }
 
       if (editingId === id) {
@@ -167,7 +167,7 @@ export default function PaymentPageClient() {
 
       await fetchSows();
 
-      showToast("success", "User berhasil dihapus");
+      showToast("success", "SOW deleted successfully");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Terjadi kesalahan";
 
@@ -247,7 +247,7 @@ export default function PaymentPageClient() {
 
             <div>
               <label className="mb-1 block text-sm font-medium text-slate-700">
-                Nama SOW
+                SOW Name
               </label>
 
               <input
@@ -445,7 +445,7 @@ export default function PaymentPageClient() {
               </div>
               <div>
                 <p className="text-sm font-semibold">
-                  {toast.type === "success" ? "Berhasil" : "Gagal"}
+                  {toast.type === "success" ? "Success" : "Error"}
                 </p>
                 <p className="mt-1 text-sm">{toast.message}</p>
               </div>

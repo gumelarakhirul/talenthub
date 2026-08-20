@@ -32,7 +32,7 @@ export async function PUT(req: Request, context: RouteContext) {
 
     return NextResponse.json(brand);
   } catch (error) {
-    return NextResponse.json({ error: "Gagal update brand" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to update brand" }, { status: 500 });
   }
 }
 
@@ -55,11 +55,11 @@ export async function DELETE(_: Request, context: RouteContext) {
 
     return NextResponse.json({
       success: true,
-      message: "Brand berhasil dinonaktifkan",
+      message: "Brand deactivated successfully",
     });
   } catch (error) {
     return NextResponse.json(
-      { error: "Gagal menghapus brand" },
+      { error: "Failed to delete brand" },
       { status: 500 }
     );
   }

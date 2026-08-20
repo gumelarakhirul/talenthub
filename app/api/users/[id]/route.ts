@@ -33,7 +33,7 @@ export async function PUT(req: Request, context: RouteContext) {
 
     if (!name || !email) {
       return NextResponse.json(
-        { error: "Nama dan email wajib diisi" },
+        { error: "Name and email are required" },
         { status: 400 }
       )
     }
@@ -79,7 +79,7 @@ export async function PUT(req: Request, context: RouteContext) {
     console.error(error)
 
     return NextResponse.json(
-      { error: "Gagal mengubah user" },
+      { error: "Failed to update user" },
       { status: 500 }
     )
   }
@@ -108,7 +108,7 @@ export async function DELETE(_: Request, context: RouteContext) {
     console.error(error)
 
     return NextResponse.json(
-      { error: "Gagal menghapus user" },
+      { error: "Failed to delete user" },
       { status: 500 }
     )
   }

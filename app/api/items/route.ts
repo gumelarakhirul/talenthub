@@ -12,7 +12,7 @@ export async function GET() {
     console.error(error)
 
     return NextResponse.json(
-      { error: 'Gagal mengambil data' },
+      { error: 'Failed to load data' },
       { status: 500 }
     )
   }
@@ -33,7 +33,7 @@ export async function POST() {
     console.error(error)
 
     return NextResponse.json(
-      { error: 'Gagal membuat row baru' },
+      { error: 'Failed to create a new row' },
       { status: 500 }
     )
   }

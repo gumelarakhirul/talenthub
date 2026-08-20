@@ -26,7 +26,7 @@ export async function GET() {
     return NextResponse.json(data);
   } catch (error) {
     console.error("GET SOW ERROR:", error);
-    return NextResponse.json({ error: "Gagal mengambil data" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to load SOW data" }, { status: 500 });
   }
 }
 
@@ -56,6 +56,6 @@ export async function POST(req: Request) {
 
     return NextResponse.json(data, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ error: "Gagal membuat data SOW" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to create SOW" }, { status: 500 });
   }
 }

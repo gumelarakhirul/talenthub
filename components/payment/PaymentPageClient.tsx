@@ -55,7 +55,7 @@ export default function PaymentPageClient() {
     const data = await res.json();
 
     if (!res.ok) {
-      throw new Error(data.error ?? "Gagal mengambil data payment");
+      throw new Error(data.error ?? "Failed to load payment accounts");
     }
 
     setPayments(data);
@@ -103,7 +103,7 @@ export default function PaymentPageClient() {
     e.preventDefault();
 
     if (!pytBank || !pytNorek || !pytNama) {
-      showToast("error", "Semua field wajib diisi");
+      showToast("error", "All fields are required");
       return;
     }
 
@@ -139,8 +139,8 @@ export default function PaymentPageClient() {
       showToast(
         "success",
         isEditing
-          ? "Payment berhasil diperbarui"
-          : "Payment berhasil ditambahkan"
+          ? "Payment account updated successfully"
+          : "Payment account added successfully"
       );
     } catch (err) {
       showToast(
@@ -153,7 +153,7 @@ export default function PaymentPageClient() {
   }
 
   async function handleDelete(id: number) {
-    const result = await confirmDelete("Hapus Payment?");
+    const result = await confirmDelete("Delete Payment Account?");
 
     if (!result.isConfirmed) return;
 
@@ -167,7 +167,7 @@ export default function PaymentPageClient() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error ?? "Gagal menghapus payment");
+        throw new Error(data.error ?? "Failed to delete payment account");
       }
 
       if (editingId === id) {
@@ -176,7 +176,7 @@ export default function PaymentPageClient() {
 
       await fetchPayments();
 
-      showToast("success", "User berhasil dihapus");
+      showToast("success", "Payment account deleted successfully");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Terjadi kesalahan";
 
@@ -276,7 +276,7 @@ export default function PaymentPageClient() {
 
             <div>
               <label className="mb-1 block text-sm font-medium text-slate-700">
-                Nama Bank
+                Bank Name
               </label>
 
               <input
@@ -289,7 +289,7 @@ export default function PaymentPageClient() {
 
             <div>
               <label className="mb-1 block text-sm font-medium text-slate-700">
-                Nomor Rekening
+                Account Number
               </label>
 
               <input
@@ -302,7 +302,7 @@ export default function PaymentPageClient() {
 
             <div>
               <label className="mb-1 block text-sm font-medium text-slate-700">
-                Nama Pemilik Rekening
+                Account Holder Name
               </label>
 
               <input
@@ -516,7 +516,7 @@ export default function PaymentPageClient() {
               </div>
               <div>
                 <p className="text-sm font-semibold">
-                  {toast.type === "success" ? "Berhasil" : "Gagal"}
+                  {toast.type === "success" ? "Success" : "Error"}
                 </p>
                 <p className="mt-1 text-sm">{toast.message}</p>
               </div>

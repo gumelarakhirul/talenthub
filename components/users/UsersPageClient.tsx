@@ -58,7 +58,7 @@ export default function UsersPageClient() {
     const data = await res.json();
 
     if (!res.ok) {
-      throw new Error(data.error ?? "Gagal mengambil data user");
+      throw new Error(data.error ?? "Failed to load users");
     }
 
     setUsers(data);
@@ -75,7 +75,7 @@ export default function UsersPageClient() {
         const data = await res.json();
 
         if (!res.ok) {
-          throw new Error(data.error ?? "Gagal mengambil data user");
+          throw new Error(data.error ?? "Failed to load users");
         }
 
         if (!cancelled) {
@@ -106,7 +106,7 @@ export default function UsersPageClient() {
     e.preventDefault();
 
     if (!name || !email || (!password && editingId === null)) {
-      const message = "Nama, email, dan password wajib diisi untuk user baru";
+      const message = "Name, email, and password are required for a new user";
       setError(message);
       showToast("error", message);
       return;
@@ -138,14 +138,14 @@ export default function UsersPageClient() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error ?? "Gagal menyimpan user");
+        throw new Error(data.error ?? "Failed to save user");
       }
 
       resetForm();
       await fetchUsers();
       showToast(
         "success",
-        isEditing ? "User berhasil diperbarui" : "User berhasil dibuat"
+        isEditing ? "User updated successfully" : "User created successfully"
       );
     } catch (err) {
       const message = err instanceof Error ? err.message : "Terjadi kesalahan";
@@ -157,7 +157,7 @@ export default function UsersPageClient() {
   }
 
   async function handleDelete(id: string) {
-    const result = await confirmDelete("Hapus User?");
+    const result = await confirmDelete("Delete User?");
 
     if (!result.isConfirmed) return;
 
@@ -171,7 +171,7 @@ export default function UsersPageClient() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error ?? "Gagal menghapus user");
+        throw new Error(data.error ?? "Failed to delete user");
       }
 
       if (editingId === id) {
@@ -180,7 +180,7 @@ export default function UsersPageClient() {
 
       await fetchUsers();
 
-      showToast("success", "User berhasil dihapus");
+      showToast("success", "User deleted successfully");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Terjadi kesalahan";
 
@@ -233,7 +233,7 @@ export default function UsersPageClient() {
         </p>
         <h1 className="mt-2 text-2xl font-bold text-slate-900">Data Users</h1>
         <p className="mt-1 text-sm text-slate-600">
-          Kelola akun user, role, dan kredensial login dari satu halaman.
+          Manage user accounts, roles, and login credentials from one place.
         </p>
       </div>
 
@@ -253,11 +253,11 @@ export default function UsersPageClient() {
 
             <div>
               <label className="mb-1 block text-sm font-medium text-slate-700">
-                Nama
+                Name
               </label>
               <input
                 type="text"
-                placeholder="Nama user"
+                placeholder="User name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none transition focus:border-sky-500"
@@ -299,8 +299,8 @@ export default function UsersPageClient() {
                   type={showPassword ? "text" : "password"}
                   placeholder={
                     editingId
-                      ? "Kosongkan jika tidak diubah"
-                      : "Masukkan password"
+                      ? "Leave blank to keep the current password"
+                      : "Enter password"
                   }
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -431,7 +431,7 @@ export default function UsersPageClient() {
                   ? "Menyimpan..."
                   : editingId
                   ? "Update User"
-                  : "Tambah User"}
+                  : "Add User"}
               </button>
 
               <button
@@ -449,7 +449,7 @@ export default function UsersPageClient() {
           <div className="mb-4 flex items-center justify-between">
             <div>
               <h2 className="text-lg font-semibold text-slate-900">
-                Daftar User
+                User List
               </h2>
               <p className="text-sm text-slate-500">
                 {users.length} user terdaftar
@@ -500,7 +500,7 @@ export default function UsersPageClient() {
                      onClick={() => handleDelete(user.id)}
                       className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-100"
                     >
-                      Hapus
+                      Delete
                     </button>
                   </div>
                 </div>
@@ -600,7 +600,7 @@ export default function UsersPageClient() {
               </div>
               <div>
                 <p className="text-sm font-semibold">
-                  {toast.type === "success" ? "Berhasil" : "Gagal"}
+                  {toast.type === "success" ? "Success" : "Error"}
                 </p>
                 <p className="mt-1 text-sm">{toast.message}</p>
               </div>

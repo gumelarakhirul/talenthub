@@ -35,7 +35,7 @@ export async function GET() {
     console.error(error);
 
     return NextResponse.json(
-      { error: "Gagal mengambil data user" },
+      { error: "Failed to load users" },
       { status: 500 }
     );
   }
@@ -65,7 +65,7 @@ export async function POST(req: Request) {
 
     if (!name || !email || !password) {
       return NextResponse.json(
-        { error: "Nama, email, dan password wajib diisi" },
+        { error: "Name, email, and password are required" },
         { status: 400 }
       );
     }
@@ -107,7 +107,7 @@ export async function POST(req: Request) {
 
     console.error("DEBUG ERROR:", error);
     return NextResponse.json(
-      { error: "Gagal membuat user: " + error.message },
+      { error: "Failed to create user: " + error.message },
       { status: 500 }
     );
   }

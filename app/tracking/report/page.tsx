@@ -14,7 +14,7 @@ const projectDetail = {
   brand: "CAFE PRO",
   projectName: "NEW YEAR 2",
   pic: "Gumelar Akhirul",
-  date: "24 Mei 2026",
+  date: "24 May 2026",
 };
 
 const creators = [

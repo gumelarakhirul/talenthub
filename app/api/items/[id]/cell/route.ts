@@ -74,7 +74,7 @@ export async function PATCH(
     console.error('PATCH /api/items/[id]/cell error:', error)
 
     return NextResponse.json(
-      { error: 'Gagal update data' },
+      { error: 'Failed to update data' },
       { status: 500 }
     )
   }

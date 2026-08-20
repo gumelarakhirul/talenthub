@@ -871,7 +871,7 @@ export default function CreatorDiscoveryPage() {
                       className="p-8 text-center text-gray-400 italic"
                     >
                       {isEditMode
-                        ? "Semua creator yang tersedia sudah ada di project ini, atau coba ubah filter."
+                        ? "All available creators are already in this project. Try adjusting the filters."
                         : "No data available. Please select and apply filters to discover creators."}
                     </td>
                   </tr>
@@ -1093,7 +1093,7 @@ export default function CreatorDiscoveryPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
                     Start Date <span className="text-red-500">*</span>

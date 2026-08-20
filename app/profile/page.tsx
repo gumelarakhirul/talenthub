@@ -15,7 +15,7 @@ export default async function ProfilePage() {
 
         <div className="grid gap-5 md:grid-cols-2">
           <div className="rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-sm">
-            <p className="text-sm font-medium text-slate-500">Nama</p>
+            <p className="text-sm font-medium text-slate-500">Name</p>
             <p className="mt-2 text-lg font-semibold text-slate-900">{session.user.name || "-"}</p>
           </div>
           <div className="rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-sm">

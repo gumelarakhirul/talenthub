@@ -53,14 +53,14 @@ export default function ItemsPage({
       const res = await fetch('/api/items', { cache: 'no-store' })
 
       if (!res.ok) {
-        throw new Error('Gagal ambil data')
+        throw new Error('Failed to load data')
       }
 
       const data: ItemRow[] = await res.json()
       setRows(data)
     } catch (error) {
       console.error(error)
-      alert('Gagal ambil data')
+      alert('Failed to load data')
     } finally {
       setInternalLoading(false)
     }
@@ -128,7 +128,7 @@ export default function ItemsPage({
         })
 
         if (!res.ok) {
-          throw new Error('Gagal save')
+          throw new Error('Failed to save data')
         }
 
         const result: { success: boolean; item: ItemRow } = await res.json()
@@ -159,19 +159,19 @@ export default function ItemsPage({
       })
 
       if (!res.ok) {
-        throw new Error('Gagal tambah row')
+        throw new Error('Failed to add row')
       }
 
       const newRow: ItemRow = await res.json()
       setRows((prev) => [...prev, newRow])
     } catch (error) {
       console.error(error)
-      alert('Gagal tambah row')
+      alert('Failed to add row')
     }
   }
 
   async function deleteRow(id: number) {
-    const ok = window.confirm('Hapus row ini?')
+    const ok = window.confirm('Delete this row?')
     if (!ok) return
 
     try {
@@ -180,13 +180,13 @@ export default function ItemsPage({
       })
 
       if (!res.ok) {
-        throw new Error('Gagal hapus')
+        throw new Error('Failed to delete row')
       }
 
       setRows((prev) => prev.filter((row) => row.id !== id))
     } catch (error) {
       console.error(error)
-      alert('Gagal hapus data')
+      alert('Failed to delete data')
     }
   }
 
@@ -203,7 +203,7 @@ export default function ItemsPage({
           onClick={addRow}
           className="rounded bg-black px-4 py-2 text-white"
         >
-          Tambah Row
+          Add Row
         </button>
       </div>
 
@@ -268,7 +268,7 @@ export default function ItemsPage({
                     onClick={() => deleteRow(row.id)}
                     className="rounded bg-red-500 px-3 py-1 text-white"
                   >
-                    Hapus
+                    Delete
                   </button>
                 </td>
               </tr>

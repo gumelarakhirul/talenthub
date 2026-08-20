@@ -31,7 +31,7 @@ export async function PUT(req: Request, context: RouteContext) {
 
     return NextResponse.json(data);
   } catch (error) {
-    return NextResponse.json({ error: "Gagal update SOW" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to update SOW" }, { status: 500 });
   }
 }
 
@@ -52,8 +52,8 @@ export async function DELETE(_: Request, context: RouteContext) {
       },
     });
 
-    return NextResponse.json({ success: true, message: "SOW berhasil dinonaktifkan" });
+    return NextResponse.json({ success: true, message: "SOW deactivated successfully" });
   } catch (error) {
-    return NextResponse.json({ error: "Gagal menghapus SOW" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to delete SOW" }, { status: 500 });
   }
 }

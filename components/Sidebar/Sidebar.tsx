@@ -198,11 +198,11 @@ const menuItems: MenuItem[] = [
       </svg>
     ),
     subItems: [
-      { label: "Master Data User", href: "/users" },
-      { label: "Master Data Payment", href: "/payment" },
-      { label: "Master Data SOW", href: "/sow" },
-      { label: "Master Data Brand", href: "/brand" },
-      { label: "Master Data Dbest", href: "/dbest" },
+      { label: "User Management", href: "/users" },
+      { label: "Payment Accounts", href: "/payment" },
+      { label: "SOW Management", href: "/sow" },
+      { label: "Brand Management", href: "/brand" },
+      { label: "Company Profile", href: "/dbest" },
     ],
   },
 ];

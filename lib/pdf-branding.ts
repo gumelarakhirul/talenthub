@@ -1,4 +1,4 @@
-export const COMPANY_LOGO_PATH = "/images/branding/dbest-logo.png";
+export const COMPANY_LOGO_PATH = "/images/branding/dbest-logo-transparent.png";
 
 export async function loadCompanyLogo(): Promise<string | null> {
   try {

@@ -28,8 +28,32 @@ type Creator = {
   followersRaw: number;
 };
 
+// --- BARU: tipe untuk Quick Search ---
+type QuickSearchPreview = {
+  username: string;
+  socialMedia: string;
+  followers: number;
+  following: number;
+  totalPost: number;
+  photoUrl?: string;
+  bio: string;
+  categoryName?: string;
+};
+
+type QuickSearchResult = {
+  inserted: boolean;
+  reason?: "not_found" | "not_indonesia";
+  message?: string;
+  preview: QuickSearchPreview | null;
+  creatorId?: number;
+};
+
 const DEFAULT_DISCOVERY_FILTERS = [
-  { id: "social_media", label: "Social Media", options: ["Instagram", "TikTok"] },
+  {
+    id: "social_media",
+    label: "Social Media",
+    options: ["Instagram", "TikTok"],
+  },
   { id: "tier", label: "Tier", options: ["Nano", "Micro", "Macro", "Mega"] },
   { id: "category", label: "Category", options: [] },
   { id: "city", label: "City", options: [] },
@@ -45,7 +69,7 @@ function profilePhotoSource(value: string | null): string {
 
 function handleProfilePhotoError(
   event: SyntheticEvent<HTMLImageElement>,
-  databaseUrl: string | null,
+  databaseUrl: string | null
 ) {
   const image = event.currentTarget;
   const rawUrl = String(databaseUrl ?? "").trim();
@@ -75,7 +99,9 @@ export default function CreatorDiscoveryPage() {
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const [filters, setFilters] = useState<Record<string, string>>({});
 
-  const [dynamicFilters, setDynamicFilters] = useState<any[]>(DEFAULT_DISCOVERY_FILTERS);
+  const [dynamicFilters, setDynamicFilters] = useState<any[]>(
+    DEFAULT_DISCOVERY_FILTERS
+  );
   const [loadingFilters, setLoadingFilters] = useState(true);
   const [filterError, setFilterError] = useState("");
   const [filterReload, setFilterReload] = useState(0);
@@ -107,6 +133,17 @@ export default function CreatorDiscoveryPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
+  // --- BARU: Quick Search 1 akun (scrape langsung, bukan dari filter) ---
+  const [quickSearchSocialMedia, setQuickSearchSocialMedia] =
+    useState("instagram");
+  const [quickSearchUsername, setQuickSearchUsername] = useState("");
+  const [quickSearching, setQuickSearching] = useState(false);
+  const [quickSearchResult, setQuickSearchResult] =
+    useState<QuickSearchResult | null>(null);
+
+  // --- BARU: Search username dari data yang SUDAH ada di database (tanpa scraping) ---
+  const [usernameSearch, setUsernameSearch] = useState("");
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -137,21 +174,31 @@ export default function CreatorDiscoveryPage() {
           if (!res.ok) throw new Error(data?.error ?? "Failed to load filters");
           if (!Array.isArray(data)) throw new Error("Invalid filter response");
           if (!controller.signal.aborted) {
-            const loadedById = new Map(data.map((filter: any) => [filter.id, filter]));
-            setDynamicFilters(DEFAULT_DISCOVERY_FILTERS.map((fallback) => {
-              const loaded = loadedById.get(fallback.id) as any;
-              return loaded ? { ...fallback, ...loaded } : fallback;
-            }));
+            const loadedById = new Map(
+              data.map((filter: any) => [filter.id, filter])
+            );
+            setDynamicFilters(
+              DEFAULT_DISCOVERY_FILTERS.map((fallback) => {
+                const loaded = loadedById.get(fallback.id) as any;
+                return loaded ? { ...fallback, ...loaded } : fallback;
+              })
+            );
           }
           return;
         } catch (error) {
-          if (error instanceof DOMException && error.name === "AbortError") return;
-          lastError = error instanceof Error ? error : new Error("Failed to load filters");
-          if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, attempt * 600));
+          if (error instanceof DOMException && error.name === "AbortError")
+            return;
+          lastError =
+            error instanceof Error
+              ? error
+              : new Error("Failed to load filters");
+          if (attempt < 3)
+            await new Promise((resolve) => setTimeout(resolve, attempt * 600));
         }
       }
 
-      if (!controller.signal.aborted) setFilterError(lastError?.message ?? "Failed to load filters");
+      if (!controller.signal.aborted)
+        setFilterError(lastError?.message ?? "Failed to load filters");
     }
     void loadDropdownFilters().finally(() => {
       if (!controller.signal.aborted) setLoadingFilters(false);
@@ -232,7 +279,8 @@ export default function CreatorDiscoveryPage() {
       targetFilter &&
       targetFilter.options?.some(
         (opt: string | { id: string; name: string }) =>
-          (typeof opt === "string" ? opt : opt.name).toLowerCase() === customValue.toLowerCase()
+          (typeof opt === "string" ? opt : opt.name).toLowerCase() ===
+          customValue.toLowerCase()
       )
     ) {
       showAlertValidationError(
@@ -289,6 +337,7 @@ export default function CreatorDiscoveryPage() {
     setIsFiltered(true);
     setSelectedRows([]);
     setCurrentPage(1);
+    setUsernameSearch("");
   };
 
   const toggleSelect = (no: number) => {
@@ -301,6 +350,14 @@ export default function CreatorDiscoveryPage() {
     // --- BARU: sembunyikan creator yang sudah ada di project (mode edit) ---
     if (isEditMode && existingCreatorIds.includes(creator.no)) {
       return false;
+    }
+
+    // --- BARU: search by username/nama dari data yang sudah ada (independen dari filter lain) ---
+    if (usernameSearch.trim()) {
+      const keyword = usernameSearch.trim().toLowerCase();
+      const matchUsername = creator.username?.toLowerCase().includes(keyword);
+      const matchName = creator.name?.toLowerCase().includes(keyword);
+      if (!matchUsername && !matchName) return false;
     }
 
     if (!isFiltered) return true;
@@ -359,7 +416,11 @@ export default function CreatorDiscoveryPage() {
     .join(",");
 
   useEffect(() => {
-    if (!currentPhotoPageKey || refreshedPhotoPages.current.has(currentPhotoPageKey)) return;
+    if (
+      !currentPhotoPageKey ||
+      refreshedPhotoPages.current.has(currentPhotoPageKey)
+    )
+      return;
     refreshedPhotoPages.current.add(currentPhotoPageKey);
     const controller = new AbortController();
 
@@ -374,20 +435,22 @@ export default function CreatorDiscoveryPage() {
         });
         if (!response.ok) return;
 
-        const result = await response.json() as {
+        const result = (await response.json()) as {
           photos?: Array<{ id: number; photo_url: string | null }>;
         };
         const photos = new Map(
           (result.photos ?? [])
             .filter((item) => item.photo_url)
-            .map((item) => [item.id, item.photo_url]),
+            .map((item) => [item.id, item.photo_url])
         );
         if (!photos.size || controller.signal.aborted) return;
 
-        setCreatorsData((previous) => previous.map((creator) => ({
-          ...creator,
-          photo_url: photos.get(creator.no) ?? creator.photo_url,
-        })));
+        setCreatorsData((previous) =>
+          previous.map((creator) => ({
+            ...creator,
+            photo_url: photos.get(creator.no) ?? creator.photo_url,
+          }))
+        );
       } catch (error) {
         if (!(error instanceof DOMException && error.name === "AbortError")) {
           console.error("Failed to refresh profile photos:", error);
@@ -525,6 +588,49 @@ export default function CreatorDiscoveryPage() {
       showAlertValidationError(
         "A connection error occurred while updating the project."
       );
+    }
+  };
+
+  // --- BARU: Search 1 akun spesifik -> scrape -> kalau lolos ketentuan, insert & buka detail.
+  // Kalau enggak, tetap tampilin datanya di layar tanpa insert.
+  const handleQuickSearch = async () => {
+    const cleanUsername = quickSearchUsername.trim().replace(/^@+/, "");
+    if (!cleanUsername) {
+      showAlertValidationError("Username wajib diisi");
+      return;
+    }
+
+    setQuickSearching(true);
+    setQuickSearchResult(null);
+
+    try {
+      const res = await fetch("/api/discovery/quick-search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: cleanUsername,
+          socialMedia: quickSearchSocialMedia,
+        }),
+      });
+      const data: QuickSearchResult = await res.json();
+
+      if (!res.ok) {
+        showAlertValidationError((data as any).error || "Gagal mencari akun.");
+        return;
+      }
+
+      if (data.inserted && data.creatorId) {
+        showAlertSuccess(`"${cleanUsername}" berhasil disimpan!`);
+        router.push(`/tracking/detail/detail/${data.creatorId}`);
+        return;
+      }
+
+      // Gak lolos ketentuan / gak ketemu -> tampilkan aja di layar, gak insert
+      setQuickSearchResult(data);
+    } catch (error) {
+      showAlertValidationError("Terjadi kesalahan koneksi.");
+    } finally {
+      setQuickSearching(false);
     }
   };
 
@@ -710,6 +816,98 @@ export default function CreatorDiscoveryPage() {
             <p className="text-gray-500">Creator Found</p>
           </div>
 
+          {/* --- BARU: Quick Search 1 akun --- */}
+          <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <h3 className="text-sm font-bold text-slate-800 mb-1">
+              Quick Search Creator
+            </h3>
+            <p className="text-xs text-slate-500 mb-3">
+              Search for a specific account to scrape instantly. If it
+              qualifies, it's saved automatically and opens right to its detail
+              page.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <select
+                value={quickSearchSocialMedia}
+                onChange={(e) => setQuickSearchSocialMedia(e.target.value)}
+                className="h-10 border border-slate-300 rounded-lg px-3 text-sm bg-white sm:w-40"
+              >
+                <option value="instagram">Instagram</option>
+                <option value="tiktok">TikTok</option>
+              </select>
+              <input
+                type="text"
+                placeholder="Username (Without @)"
+                value={quickSearchUsername}
+                onChange={(e) => setQuickSearchUsername(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleQuickSearch()}
+                className="flex-1 h-10 border border-slate-300 rounded-lg px-3 text-sm bg-white"
+              />
+              <button
+                onClick={handleQuickSearch}
+                disabled={quickSearching}
+                className="h-10 px-5 bg-black text-white rounded-lg font-medium text-sm hover:bg-gray-800 disabled:opacity-50 whitespace-nowrap"
+              >
+                {quickSearching ? "Scraping..." : "Search & Save"}
+              </button>
+            </div>
+
+            {/* Hasil kalau GAK di-insert (gak lolos ketentuan / gak ketemu) */}
+            {quickSearchResult && (
+              <div
+                className={`mt-3 rounded-lg border p-3 ${
+                  quickSearchResult.preview
+                    ? "border-amber-200 bg-amber-50"
+                    : "border-rose-200 bg-rose-50"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <p
+                    className={`text-xs font-semibold ${
+                      quickSearchResult.preview
+                        ? "text-amber-700"
+                        : "text-rose-600"
+                    }`}
+                  >
+                    {quickSearchResult.reason === "not_indonesia"
+                      ? "Tidak disimpan — bukan akun Indonesia"
+                      : quickSearchResult.message}
+                  </p>
+                  <button
+                    onClick={() => setQuickSearchResult(null)}
+                    className="text-slate-400 hover:text-slate-600 text-sm leading-none"
+                  >
+                    ×
+                  </button>
+                </div>
+
+                {quickSearchResult.preview && (
+                  <div className="flex items-center gap-3 mt-2">
+                    <img
+                      src={
+                        quickSearchResult.preview.photoUrl ||
+                        "/image/default-kol-avatar.png"
+                      }
+                      alt={quickSearchResult.preview.username}
+                      className="w-12 h-12 rounded-lg object-cover bg-slate-100"
+                    />
+                    <div className="min-w-0">
+                      <p className="font-semibold text-slate-800 text-sm truncate">
+                        {quickSearchResult.preview.username}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {quickSearchResult.preview.followers.toLocaleString()}{" "}
+                        followers ·{" "}
+                        {quickSearchResult.preview.totalPost.toLocaleString()}{" "}
+                        posts
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           <div className="mb-6 flex flex-wrap items-center gap-3 sm:gap-4">
             {selectedRows.length > 0 && (
               <div className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-medium text-sm">
@@ -731,23 +929,61 @@ export default function CreatorDiscoveryPage() {
             </button>
           </div>
 
-          <div className="flex items-center gap-2 text-sm mb-4">
-            <span>Show</span>
-            <select
-              value={entriesPerPage}
-              onChange={(e) => {
-                setEntriesPerPage(Number(e.target.value));
-                setCurrentPage(1);
-              }}
-              className="border border-gray-300 rounded px-2 py-1 bg-white cursor-pointer focus:outline-none focus:border-blue-500"
-            >
-              {[10, 25, 50, 100].map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-            <span>entries</span>
+          {/* --- BARU: Show entries + search username dari data yang sudah ada di DB --- */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <div className="flex items-center gap-2 text-sm">
+              <span>Show</span>
+              <select
+                value={entriesPerPage}
+                onChange={(e) => {
+                  setEntriesPerPage(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className="border border-gray-300 rounded px-2 py-1 bg-white cursor-pointer focus:outline-none focus:border-blue-500"
+              >
+                {[10, 25, 50, 100].map((size) => (
+                  <option key={size} value={size}>
+                    {size}
+                  </option>
+                ))}
+              </select>
+              <span>entries</span>
+            </div>
+
+            <div className="relative sm:w-64">
+              <input
+                type="text"
+                value={usernameSearch}
+                onChange={(e) => {
+                  setUsernameSearch(e.target.value);
+                  setCurrentPage(1);
+                }}
+                placeholder="Cari username / nama..."
+                className="w-full h-9 border border-gray-300 rounded-lg pl-8 pr-3 text-sm bg-white focus:outline-none focus:border-blue-500"
+              />
+              <svg
+                className="w-4 h-4 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-4.35-4.35M17 10a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+              {usernameSearch && (
+                <button
+                  type="button"
+                  onClick={() => setUsernameSearch("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-sm"
+                >
+                  ×
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="overflow-x-auto border border-gray-200 rounded-lg w-full max-h-[500px] overflow-y-auto">
@@ -812,7 +1048,9 @@ export default function CreatorDiscoveryPage() {
                           alt={`${row.name} profile`}
                           className="w-full h-full object-cover"
                           referrerPolicy="no-referrer"
-                          onError={(event) => handleProfilePhotoError(event, row.photo_url)}
+                          onError={(event) =>
+                            handleProfilePhotoError(event, row.photo_url)
+                          }
                         />
                       </div>
                     </td>
@@ -1048,7 +1286,7 @@ export default function CreatorDiscoveryPage() {
                 </div>
 
                 {isBrandDropdownOpen && (
-                  <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                  <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg show-lg max-h-40 overflow-y-auto">
                     {brandsOptions.map(
                       (brand: { id: string; name: string }) => (
                         <div
@@ -1078,18 +1316,56 @@ export default function CreatorDiscoveryPage() {
 
               <div>
                 <div className="mb-2 flex items-center justify-between">
-                  <label className="text-sm font-medium text-slate-700">Selected Creators</label>
-                  <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">{selectedRows.length}</span>
+                  <label className="text-sm font-medium text-slate-700">
+                    Selected Creators
+                  </label>
+                  <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+                    {selectedRows.length}
+                  </span>
                 </div>
                 <div className="max-h-44 space-y-2 overflow-y-auto rounded-lg border border-slate-200 bg-slate-50 p-2">
-                  {creatorsData.filter((creator) => selectedRows.includes(creator.no)).map((creator) => (
-                    <div key={creator.no} className="flex items-center gap-3 rounded-lg bg-white p-2 shadow-sm">
-                      <img src={profilePhotoSource(creator.photo_url)} onError={(event) => handleProfilePhotoError(event, creator.photo_url)} alt="" className="h-9 w-9 rounded-full bg-slate-100 object-cover" />
-                      <div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-slate-800">{creator.name}</p><p className="truncate text-xs text-slate-500">@{creator.username.replace(/^@+/, "")}</p></div>
-                      <button type="button" aria-label={`Remove ${creator.name}`} onClick={() => setSelectedRows((current) => current.filter((id) => id !== creator.no))} className="rounded-md px-2 py-1 text-lg font-bold text-rose-600 hover:bg-rose-50">×</button>
-                    </div>
-                  ))}
-                  {selectedRows.length === 0 && <p className="py-3 text-center text-xs text-slate-500">No creators selected.</p>}
+                  {creatorsData
+                    .filter((creator) => selectedRows.includes(creator.no))
+                    .map((creator) => (
+                      <div
+                        key={creator.no}
+                        className="flex items-center gap-3 rounded-lg bg-white p-2 shadow-sm"
+                      >
+                        <img
+                          src={profilePhotoSource(creator.photo_url)}
+                          onError={(event) =>
+                            handleProfilePhotoError(event, creator.photo_url)
+                          }
+                          alt=""
+                          className="h-9 w-9 rounded-full bg-slate-100 object-cover"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold text-slate-800">
+                            {creator.name}
+                          </p>
+                          <p className="truncate text-xs text-slate-500">
+                            @{creator.username.replace(/^@+/, "")}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          aria-label={`Remove ${creator.name}`}
+                          onClick={() =>
+                            setSelectedRows((current) =>
+                              current.filter((id) => id !== creator.no)
+                            )
+                          }
+                          className="rounded-md px-2 py-1 text-lg font-bold text-rose-600 hover:bg-rose-50"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  {selectedRows.length === 0 && (
+                    <p className="py-3 text-center text-xs text-slate-500">
+                      No creators selected.
+                    </p>
+                  )}
                 </div>
               </div>
 

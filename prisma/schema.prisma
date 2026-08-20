@@ -157,14 +157,14 @@ model mst_cities {
 }
 
 model mst_dbest {
-  bst_id     Int       @id @default(autoincrement())
-  bst_nama   String?   @db.VarChar(100)
-  bst_alamat String?   @db.VarChar(100)
-  bst_status Int?      @default(1)
-  creaby     String?   @db.VarChar(20)
-  creadate   DateTime? @default(now()) @db.Timestamp(6)
-  modiby     String?   @db.VarChar(20)
-  modidate   DateTime? @default(now()) @db.Timestamp(6)
+  bst_id      Int           @id @default(autoincrement())
+  bst_nama    String?       @db.VarChar(100)
+  bst_alamat  String?       @db.VarChar(100)
+  bst_status  Int?          @default(1)
+  creaby      String?       @db.VarChar(20)
+  creadate    DateTime?     @default(now()) @db.Timestamp(6)
+  modiby      String?       @db.VarChar(20)
+  modidate    DateTime?     @default(now()) @db.Timestamp(6)
   trs_project trs_project[]
 }
 
@@ -176,36 +176,36 @@ model mst_general_filters {
 }
 
 model trs_project {
-  prj_id          Int           @id @default(autoincrement())
-  prj_brand       Int
-  prj_nama        String        @db.VarChar(100)
-  prj_quotationno String?       @db.VarChar(100)
-  prj_invoiceno   String?       @db.VarChar(100)
-  prj_dstartdate  DateTime      @db.Date
-  prj_denddate    DateTime      @db.Date
-  prj_qstartdate  DateTime?     @db.Date
-  prj_qenddate    DateTime?     @db.Date
-  prj_rstartdate  DateTime?     @db.Date
-  prj_renddate    DateTime?     @db.Date
-  prj_istartdate  DateTime?     @db.Date
-  prj_ienddate    DateTime?     @db.Date
-  prj_status      Int           @default(1)
-  creaby          String        @db.VarChar(20)
-  creadate        DateTime      @default(now()) @db.Timestamp(6)
-  modiby          String?       @db.VarChar(20)
-  modidate        DateTime?     @default(now()) @db.Timestamp(6)
-  prj_kode        String        @unique(map: "uq_project_kode") @db.VarChar(20)
-  prj_paymentid   Int?
-  prj_dbestid     Int?
-  prj_sheet_sync  DateTime?     @db.Timestamp(6)
-  prj_sheetid     String?       @db.VarChar(150)
-  prj_sheeturl    String?
-  prj_tax_rate    Decimal       @default(11.00) @db.Decimal(5, 2)
-  prj_invoice_tax_rate Decimal?  @db.Decimal(5, 2)
-  dtl_project     dtl_project[]
-  mst_brand       mst_brand     @relation(fields: [prj_brand], references: [brd_id], map: "fk_trs_project_brand")
-  mst_payment     mst_payment?  @relation(fields: [prj_paymentid], references: [pyt_id], onUpdate: NoAction, map: "fk_trs_project_payment")
-  mst_dbest       mst_dbest?    @relation(fields: [prj_dbestid], references: [bst_id], onUpdate: NoAction, map: "fk_trs_project_dbest")
+  prj_id               Int           @id @default(autoincrement())
+  prj_brand            Int
+  prj_nama             String        @db.VarChar(100)
+  prj_quotationno      String?       @db.VarChar(100)
+  prj_invoiceno        String?       @db.VarChar(100)
+  prj_dstartdate       DateTime      @db.Date
+  prj_denddate         DateTime      @db.Date
+  prj_qstartdate       DateTime?     @db.Date
+  prj_qenddate         DateTime?     @db.Date
+  prj_rstartdate       DateTime?     @db.Date
+  prj_renddate         DateTime?     @db.Date
+  prj_istartdate       DateTime?     @db.Date
+  prj_ienddate         DateTime?     @db.Date
+  prj_status           Int           @default(1)
+  creaby               String        @db.VarChar(20)
+  creadate             DateTime      @default(now()) @db.Timestamp(6)
+  modiby               String?       @db.VarChar(20)
+  modidate             DateTime?     @default(now()) @db.Timestamp(6)
+  prj_kode             String        @unique(map: "uq_project_kode") @db.VarChar(20)
+  prj_paymentid        Int?
+  prj_sheet_sync       DateTime?     @db.Timestamp(6)
+  prj_sheetid          String?       @db.VarChar(150)
+  prj_sheeturl         String?
+  prj_tax_rate         Decimal       @default(11.00) @db.Decimal(5, 2)
+  prj_invoice_tax_rate Decimal?      @db.Decimal(5, 2)
+  prj_dbestid          Int?
+  dtl_project          dtl_project[]
+  mst_brand            mst_brand     @relation(fields: [prj_brand], references: [brd_id], map: "fk_trs_project_brand")
+  mst_dbest            mst_dbest?    @relation(fields: [prj_dbestid], references: [bst_id], onUpdate: NoAction, map: "fk_trs_project_dbest")
+  mst_payment          mst_payment?  @relation(fields: [prj_paymentid], references: [pyt_id], onUpdate: NoAction, map: "fk_trs_project_payment")
 }
 
 model mst_apify_tokens {

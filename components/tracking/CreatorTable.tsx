@@ -609,7 +609,7 @@ export default function CreatorTable({
                 onClick={() => {
                   if (onDelete) onDelete(creator.drf_id);
                 }}
-                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-red-200 bg-red-50 hover:bg-red-100"
+                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-opacity hover:opacity-70"
               >
                 <DeleteIcon className="h-5 w-5 text-red-500" />
               </button>
@@ -681,7 +681,7 @@ export default function CreatorTable({
                   </div>
                 </th>
               ))}
-              <th className="sticky right-0 min-w-[220px] whitespace-nowrap border-r border-gray-200 bg-gray-100 p-3 font-semibold text-gray-700">
+              <th className="sticky right-0 min-w-[220px] whitespace-nowrap border-r border-gray-200 bg-gray-100 p-3 text-center font-semibold text-gray-700">
                 Action Detail
               </th>
             </tr>

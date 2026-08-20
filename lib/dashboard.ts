@@ -31,6 +31,18 @@ export function projectGrandTotal(
   return calculateTaxSummary(subtotal, Number(taxRate ?? 11)).grandTotal;
 }
 
+export function projectFinancialSummary(
+  details: Array<{ drf_markup_price: unknown; drf_qty: number | null }>,
+  taxRate: unknown,
+) {
+  const grossIncome = details.reduce(
+    (sum, detail) => sum + Number(detail.drf_markup_price ?? 0) * Number(detail.drf_qty ?? 0),
+    0,
+  );
+  const taxDeduction = calculateTaxSummary(grossIncome, Number(taxRate ?? 11)).ppn;
+  return { grossIncome, taxDeduction, netIncome: Math.max(0, grossIncome - taxDeduction) };
+}
+
 export function growthPercentage(current: number, previous: number) {
   if (previous === 0) return current === 0 ? 0 : null;
   return ((current - previous) / previous) * 100;

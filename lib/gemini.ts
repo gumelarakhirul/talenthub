@@ -1,12 +1,16 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { RawPost } from './apify';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-
 const MODEL_CANDIDATES = ['gemini-flash-latest', 'gemini-3.5-flash', 'gemini-flash-lite-latest'];
 
+function getGeminiClient() {
+  const apiKey = process.env.GEMINI_API_KEY?.trim();
+  if (!apiKey) throw new Error('GEMINI_API_KEY is required only when running the Discovery AI pipeline');
+  return new GoogleGenerativeAI(apiKey);
+}
+
 async function callModel(modelName: string, prompt: string): Promise<string> {
-  const model = genAI.getGenerativeModel({ model: modelName });
+  const model = getGeminiClient().getGenerativeModel({ model: modelName });
   const result = await model.generateContent(prompt);
   return result.response.text().replace(/```json|```/g, '').trim();
 }

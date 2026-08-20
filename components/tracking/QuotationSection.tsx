@@ -2,6 +2,7 @@ import { ChangeEvent, ReactNode, useEffect, useRef, useState } from "react";
 import FileDocumentIcon from "@/components/icons/FileDocumentIcon";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { loadCompanyLogo } from "@/lib/pdf-branding";
 
 import CreatorTable from "./CreatorTable";
 import { showAlertValidationError, showSuccess } from "@/lib/alert";
@@ -105,7 +106,8 @@ export default function QuotationSection({
   };
 
   // FUNGSI UNTUK EKSPOR KE PDF (SESUAI KODE YANG ANDA BERIKAN)
-  const createQuotationPdf = () => {
+  const createQuotationPdf = async () => {
+    const companyLogo = await loadCompanyLogo();
     const doc = new jsPDF({
       orientation: "portrait",
       unit: "mm",
@@ -147,13 +149,7 @@ export default function QuotationSection({
       addressLines.forEach((line: string, index: number) => doc.text(line, contentLeft, 22 + index * 5));
 
       // LOGO AREA
-      doc.setDrawColor(190, 150, 120);
-      doc.setLineWidth(0.4);
-      doc.circle(160, 23, 14);
-      doc.setFont("times", "bold");
-      doc.setFontSize(9);
-      doc.setTextColor(150, 110, 85);
-      doc.text(doc.splitTextToSize(companyName, 24).slice(0, 2), 160, 21, { align: "center" });
+      if (companyLogo) doc.addImage(companyLogo, "PNG", 144, 10, 48, 25, undefined, "FAST");
 
       // QUOTATION INFO
       doc.setTextColor(...black);
@@ -454,8 +450,8 @@ export default function QuotationSection({
     return doc;
   };
 
-  const handleExportToPdf = () => {
-    createQuotationPdf().save(getQuotationFileName());
+  const handleExportToPdf = async () => {
+    (await createQuotationPdf()).save(getQuotationFileName());
   };
 
   const sendQuotationPdf = async (pdf: Blob, filename: string) => {

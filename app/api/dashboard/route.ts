@@ -1,5 +1,5 @@
 import { authOptions } from "@/auth";
-import { getPeriodRange, projectGrandTotal, growthPercentage, addDays, startOfDay, type DashboardPeriod } from "@/lib/dashboard";
+import { getPeriodRange, projectFinancialSummary, projectGrandTotal, growthPercentage, addDays, startOfDay, type DashboardPeriod } from "@/lib/dashboard";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
@@ -105,6 +105,14 @@ export async function GET(request: Request) {
     const completedAmount = (project: typeof completedInPeriod[number]) =>
       projectGrandTotal(project.dtl_project, project.prj_invoice_tax_rate ?? project.prj_tax_rate);
     const revenue = completedInPeriod.reduce((sum, project) => sum + completedAmount(project), 0);
+    const income = completedInPeriod.reduce((summary, project) => {
+      const value = projectFinancialSummary(project.dtl_project, project.prj_invoice_tax_rate ?? project.prj_tax_rate);
+      return {
+        grossIncome: summary.grossIncome + value.grossIncome,
+        taxDeduction: summary.taxDeduction + value.taxDeduction,
+        netIncome: summary.netIncome + value.netIncome,
+      };
+    }, { grossIncome: 0, taxDeduction: 0, netIncome: 0 });
     const currentRevenue = completedCurrentMonth.reduce((sum, project) => sum + projectGrandTotal(project.dtl_project, project.prj_invoice_tax_rate ?? project.prj_tax_rate), 0);
     const previousRevenue = completedPreviousMonth.reduce((sum, project) => sum + projectGrandTotal(project.dtl_project, project.prj_invoice_tax_rate ?? project.prj_tax_rate), 0);
 
@@ -169,6 +177,7 @@ export async function GET(request: Request) {
         revenue, outstandingTotal: outstanding.reduce((sum, invoice) => sum + invoice.amount, 0),
         completedProjects: completedInPeriod.length,
         averageProjectValue: completedInPeriod.length ? revenue / completedInPeriod.length : 0,
+        ...income,
       },
       revenueTrend: trend.map(({ label, value }) => ({ label, value })),
       creatorStats: {

@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { normalizePlatform, SOCIAL_PLATFORMS } from './social-platform';
+import { loadCompanyLogo } from './pdf-branding';
 
 type StoredReport = {
   caption: string | null;
@@ -461,6 +462,7 @@ async function shortVideoInsightsPage(doc: jsPDF, item: ReportItem) {
 }
 
 export async function createDetailReportPdf(payload: DetailReportPayload) {
+  const companyLogo = await loadCompanyLogo();
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   const width = doc.internal.pageSize.getWidth();
   const reportItems = payload.items.filter((item) => item.report);
@@ -477,13 +479,7 @@ export async function createDetailReportPdf(payload: DetailReportPayload) {
   doc.setFontSize(12);
   doc.text(`Project ${payload.project.code}`, 18, 145);
   doc.text(`Prepared by ${payload.project.pic || companyName}`, 18, 154);
-  doc.setDrawColor(190, 150, 120);
-  doc.setLineWidth(0.7);
-  doc.circle(width - 52, 145, 18);
-  doc.setFont('times', 'bold');
-  doc.setFontSize(9);
-  doc.setTextColor(151, 109, 80);
-  doc.text(doc.splitTextToSize(companyName, 30).slice(0, 2), width - 52, 143, { align: 'center' });
+  if (companyLogo) doc.addImage(companyLogo, 'PNG', width - 91, 124, 72, 38, undefined, 'FAST');
 
   page++;
   addPage(doc, page, companyName);

@@ -208,6 +208,18 @@ model trs_project {
   mst_dbest       mst_dbest?    @relation(fields: [prj_dbestid], references: [bst_id], onUpdate: NoAction, map: "fk_trs_project_dbest")
 }
 
+model mst_apify_tokens {
+  id                Int       @id @default(autoincrement())
+  token             String    @unique
+  label             String?
+  is_active         Boolean   @default(true)
+  quota_exceeded_at DateTime?
+  last_used_at      DateTime?
+  created_at        DateTime  @default(now())
+
+  @@index([is_active, quota_exceeded_at])
+}
+
 model mst_creators {
   id                 Int                 @id @default(autoincrement())
   name               String              @db.VarChar(150)

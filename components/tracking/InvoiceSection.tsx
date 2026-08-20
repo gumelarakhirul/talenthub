@@ -2,6 +2,7 @@ import { ChangeEvent, ReactNode, useEffect, useRef, useState } from "react";
 import FileDocumentIcon from "@/components/icons/FileDocumentIcon";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { loadCompanyLogo } from "@/lib/pdf-branding";
 import { showAlertValidationError, showSuccess } from "@/lib/alert";
 import { calculateTaxSummary } from "@/lib/tax";
 
@@ -90,7 +91,8 @@ export default function InvoiceSection({
   const getFileName = () =>
     `Invoice_${projectDetail?.code ?? projectDetail?.name ?? "Project"}.pdf`;
 
-  const createInvoicePdf = () => {
+  const createInvoicePdf = async () => {
+    const companyLogo = await loadCompanyLogo();
     const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "letter" });
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -107,9 +109,12 @@ export default function InvoiceSection({
 
     drawPageDecoration();
     doc.setTextColor(...black);
-    doc.setFont("times", "bolditalic");
-    doc.setFontSize(18);
-    doc.text(companyName, 8, 20);
+    if (companyLogo) doc.addImage(companyLogo, "PNG", 8, 12, 50, 23, undefined, "FAST");
+    else {
+      doc.setFont("times", "bolditalic");
+      doc.setFontSize(18);
+      doc.text(companyName, 8, 20);
+    }
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
@@ -261,7 +266,7 @@ export default function InvoiceSection({
     return doc;
   };
 
-  const handleExportPdf = () => createInvoicePdf().save(getFileName());
+  const handleExportPdf = async () => (await createInvoicePdf()).save(getFileName());
 
   const sendInvoicePdf = async (pdf: Blob, filename: string) => {
     if (!projectDetail?.id) {

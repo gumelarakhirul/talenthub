@@ -1,8 +1,6 @@
-import { ApifyClient } from 'apify-client';
 import type { SocialPlatform } from './social-platform';
 import { contentIdentityMatches, getContentIdentity } from './content-url';
-
-const client = new ApifyClient({ token: process.env.APIFY_TOKEN! });
+import { withApifyClient } from './apify-token-pool';
 
 export interface RawPost {
   caption: string;
@@ -28,6 +26,7 @@ export interface RawProfile {
 }
 
 export async function scrapeInstagramProfiles(usernames: string[], resultsLimit = 30): Promise<RawProfile[]> {
+  return withApifyClient(async (client) => {
   const run = await client.actor('apify/instagram-scraper').call({
     directUrls: usernames.map(u => `https://www.instagram.com/${u}/`),
     resultsType: 'details',
@@ -65,9 +64,11 @@ export async function scrapeInstagramProfiles(usernames: string[], resultsLimit 
     isValid: !item.error,
     });
   });
+  });
 }
 
 export async function scrapeTiktokProfiles(usernames: string[], resultsPerPage = 30): Promise<RawProfile[]> {
+  return withApifyClient(async (client) => {
   const run = await client.actor('clockworks/tiktok-scraper').call({
     profiles: usernames,
     resultsPerPage,
@@ -114,6 +115,7 @@ export async function scrapeTiktokProfiles(usernames: string[], resultsPerPage =
       })),
       isValid: true,
     };
+  });
   });
 }
 
@@ -211,12 +213,11 @@ async function resolveShortUrl(value: string): Promise<string> {
 }
 
 export async function scrapeContentUrl(value: string, expectedPlatform?: string | null): Promise<ContentMetrics> {
-  if (!process.env.APIFY_TOKEN) throw new Error('APIFY_TOKEN is not configured');
-
   const resolvedUrl = await resolveShortUrl(value);
   const requested = getContentIdentity(resolvedUrl, expectedPlatform);
   const contentUrl = requested.normalizedUrl;
   const platform = requested.platform;
+  return withApifyClient(async (client) => {
   // The general Instagram actor does not expose saves/reposts for a direct post.
   // This URL-specific actor returns those engagement fields and a stable thumbnail field.
   const run = platform === 'instagram'
@@ -249,18 +250,21 @@ export async function scrapeContentUrl(value: string, expectedPlatform?: string 
       return false;
     }
   });
-  const item = matchingItem;
+  // URL-specific actors occasionally omit the permalink from their payload.
+  // A single result is still tied to the one URL submitted to that actor. If a
+  // returned identity is present, however, it must remain an exact match.
+  const soleItemWithoutIdentity = actorItems.length === 1 && !returnedContentUrl(actorItems[0], platform)
+    ? actorItems[0]
+    : undefined;
+  const item = matchingItem ?? soleItemWithoutIdentity;
   if (!actorItems[0]) throw new Error('Content could not be found or is not public');
   if (!item) {
     throw new Error('Scraper did not return the exact requested content');
   }
   if (item.error) throw new Error(String(item.error));
   const returnedUrl = returnedContentUrl(item, platform);
-  if (!returnedUrl) throw new Error('Scraper result did not include the requested content identity');
-  const returned = getContentIdentity(returnedUrl, platform);
-  if (!contentIdentityMatches(requested, returned)) {
-    throw new Error('Scraper did not return the exact requested content');
-  }
+  const returned = returnedUrl ? getContentIdentity(returnedUrl, platform) : requested;
+  if (returnedUrl && !contentIdentityMatches(requested, returned)) throw new Error('Scraper did not return the exact requested content');
   const verifiedContent = {
     scrapedContentUrl: returned.normalizedUrl,
     contentId: requested.contentId ?? returned.contentId ?? '',
@@ -353,4 +357,5 @@ export async function scrapeContentUrl(value: string, expectedPlatform?: string 
     duration: Number(item.duration ?? item.video?.duration ?? item.media?.[0]?.duration) || 0,
     shares: int(metrics.quoteCount ?? metrics.quotes ?? item.quoteCount),
   };
+  });
 }

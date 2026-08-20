@@ -1076,6 +1076,23 @@ export default function CreatorDiscoveryPage() {
                 )}
               </div>
 
+              <div>
+                <div className="mb-2 flex items-center justify-between">
+                  <label className="text-sm font-medium text-slate-700">Selected Creators</label>
+                  <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">{selectedRows.length}</span>
+                </div>
+                <div className="max-h-44 space-y-2 overflow-y-auto rounded-lg border border-slate-200 bg-slate-50 p-2">
+                  {creatorsData.filter((creator) => selectedRows.includes(creator.no)).map((creator) => (
+                    <div key={creator.no} className="flex items-center gap-3 rounded-lg bg-white p-2 shadow-sm">
+                      <img src={profilePhotoSource(creator.photo_url)} onError={(event) => handleProfilePhotoError(event, creator.photo_url)} alt="" className="h-9 w-9 rounded-full bg-slate-100 object-cover" />
+                      <div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-slate-800">{creator.name}</p><p className="truncate text-xs text-slate-500">@{creator.username.replace(/^@+/, "")}</p></div>
+                      <button type="button" aria-label={`Remove ${creator.name}`} onClick={() => setSelectedRows((current) => current.filter((id) => id !== creator.no))} className="rounded-md px-2 py-1 text-lg font-bold text-rose-600 hover:bg-rose-50">×</button>
+                    </div>
+                  ))}
+                  {selectedRows.length === 0 && <p className="py-3 text-center text-xs text-slate-500">No creators selected.</p>}
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">

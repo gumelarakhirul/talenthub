@@ -250,11 +250,11 @@ export default function Sidebar({
         <div className="flex h-full flex-col items-center">
           <div className="flex items-center justify-center py-6">
   <Image
-    src="/image/talenthub1.png"
-    alt="TalentHub"
-    width={38}
-    height={38}
-    className="object-contain"
+    src="/images/branding/dbest-logo.png"
+    alt="D'Best Influence"
+    width={64}
+    height={32}
+    className="h-8 w-16 object-contain"
   />
 </div>
 

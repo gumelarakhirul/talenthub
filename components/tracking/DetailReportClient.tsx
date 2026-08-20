@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { normalizePlatform, SOCIAL_PLATFORMS } from '@/lib/social-platform';
 
@@ -34,7 +34,6 @@ export default function DetailReportClient() {
   const [loading, setLoading] = useState(true);
   const [scraping, setScraping] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
-  const started = useRef(false);
 
   const queryString = useMemo(() => {
     const query = new URLSearchParams({ projectId: String(projectId) });
@@ -63,19 +62,16 @@ export default function DetailReportClient() {
   }, [projectId]);
 
   useEffect(() => {
-    if (!projectId || started.current) { if (!projectId) setLoading(false); return; }
-    started.current = true;
+    if (!projectId) { setLoading(false); return; }
     fetch(`/api/tracking/detail-report?${queryString}`, { cache: 'no-store' })
       .then(async (response) => {
         const result = await response.json();
         if (!response.ok) throw new Error(result.error ?? 'Failed to load report');
         setData(result);
-        const ids = (result.items as Item[]).filter((item) => item.contentUrl).map((item) => item.detailId);
-        await scrape(ids);
       })
       .catch((error) => setErrors([error.message]))
       .finally(() => setLoading(false));
-  }, [projectId, queryString, scrape]);
+  }, [projectId, queryString]);
 
   if (loading) return <ReportLoading />;
   if (!projectId) return <Status text="Project ID is missing." />;
@@ -141,7 +137,7 @@ function ReportCard({ item, loading }: { item: Item; loading: boolean }) {
         <div><h2 className="font-bold text-slate-900">{item.creatorName}</h2><p className="text-sm text-slate-500">@{item.username.replace(/^@+/, '')} · {platformInfo?.label ?? item.platform}{item.sow ? ` · ${item.sow}` : ''}</p></div>
       </div>
       {!item.contentUrl ? <p className="rounded-xl bg-amber-50 p-4 text-amber-800">URL Content has not been entered.</p> : !report ?
-        <p className="rounded-xl bg-slate-50 p-4 text-slate-500">{loading ? 'Fetching metadata from URL...' : 'Metadata is not available.'}</p> :
+        <p className="rounded-xl bg-slate-50 p-4 text-slate-500">{loading ? 'Fetching metadata from URL...' : 'Metadata is not available. Click Update Data to fetch it.'}</p> :
         <div className="grid min-w-0 items-start gap-6 lg:grid-cols-[minmax(240px,320px)_minmax(0,1fr)]">
           <a href={item.contentUrl} target="_blank" rel="noreferrer" className="group relative flex min-h-72 self-start items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-2">
             <img src={thumbnailSource(report.thumbnail_url, fallbackImage)} alt={`Content by ${item.creatorName}`}

@@ -106,7 +106,7 @@ export default function DraftSection({
             creators={creators}
             handleSort={handleSort}
             getSortIcon={getSortIcon}
-            showDelete={!readOnly} // This was correct, but the user wants delete icon. Let's ensure it works.
+            showDelete={!readOnly && (!projectDetail?.status || projectDetail.status === "Draft")}
             onDelete={handleDelete}
             showView={showView}
             onView={onView}

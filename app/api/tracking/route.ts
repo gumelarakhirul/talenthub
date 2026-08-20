@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { isGoogleSheetsConfigured, syncProjectSpreadsheet } from "@/lib/google-sheets";
+import { normalizeProjectNumber } from "@/lib/project-numbers";
 
 const TRANSIENT_DATABASE_CODES = new Set(["P1001", "P1002", "P1008", "P1017", "P2024"]);
 
@@ -128,9 +129,33 @@ if (id) {
     );
   }
 
+  const transactionNo = normalizeProjectNumber("TRS", project.prj_kode) || project.prj_kode;
+  const quotationNo = project.prj_status >= 2
+    ? normalizeProjectNumber("QUO", project.prj_quotationno, transactionNo)
+    : "";
+  const invoiceNo = project.prj_status >= 5
+    ? normalizeProjectNumber("INV", project.prj_invoiceno, transactionNo)
+    : "";
+
+  const repairedNumbers = {
+    ...(project.prj_kode !== transactionNo ? { prj_kode: transactionNo } : {}),
+    ...(project.prj_status >= 2 && project.prj_quotationno !== quotationNo
+      ? { prj_quotationno: quotationNo }
+      : {}),
+    ...(project.prj_status >= 5 && project.prj_invoiceno !== invoiceNo
+      ? { prj_invoiceno: invoiceNo }
+      : {}),
+  };
+  if (Object.keys(repairedNumbers).length > 0) {
+    await prisma.trs_project.update({
+      where: { prj_id: project.prj_id },
+      data: repairedNumbers,
+    }).catch((error) => console.error("PROJECT NUMBER BACKFILL ERROR:", error));
+  }
+
   return NextResponse.json({
     id: project.prj_id,
-    code: project.prj_kode,
+    code: transactionNo,
 
     brandId: project.prj_brand,
     brand: project.mst_brand?.brd_nama ?? "",
@@ -141,8 +166,8 @@ if (id) {
 
     name: project.prj_nama,
 
-    quotationNo: project.prj_quotationno ?? "",
-    invoiceNo: project.prj_invoiceno ?? "",
+    quotationNo,
+    invoiceNo,
     taxRate: Number(project.prj_tax_rate),
     invoiceTaxRate: Number(project.prj_invoice_tax_rate ?? project.prj_tax_rate),
     payment: project.mst_payment
@@ -205,7 +230,9 @@ if (id) {
 
 const result = projects.map((item) => ({
   id: item.prj_id,
-  code: item.prj_kode,
+  // Progress cards use a project-facing PRJ code. The official transaction
+  // number remains TRS and is returned by the detail endpoint for documents.
+  code: normalizeProjectNumber("PRJ", item.prj_kode) || item.prj_kode,
   name: item.prj_nama,
   brandId: item.prj_brand,
   brand: item.mst_brand?.brd_nama ?? "",
@@ -259,8 +286,8 @@ const project = await prisma.trs_project.create({
     prj_brand: Number(body.prj_brand),
     prj_dbestid: activeDbest.bst_id,
     prj_nama: body.prj_nama,
-    prj_quotationno: body.prj_quotationno ?? projectCode.replace(/^TRS-/i, "QUO-"),
-    prj_invoiceno: body.prj_invoiceno ?? projectCode.replace(/^TRS-/i, "INV-"),
+    prj_quotationno: null,
+    prj_invoiceno: null,
 
     prj_dstartdate: new Date(body.prj_dstartdate),
 
@@ -390,8 +417,8 @@ export async function PUT(request: Request) {
       }
 
       selectedPaymentId = payment.pyt_id;
-      generatedInvoiceNo = currentProject.prj_invoiceno
-        ?? currentProject.prj_kode.replace(/^TRS-/i, "INV-");
+      const transactionNo = normalizeProjectNumber("TRS", currentProject.prj_kode) || currentProject.prj_kode;
+      generatedInvoiceNo = normalizeProjectNumber("INV", currentProject.prj_invoiceno, transactionNo);
       initialInvoiceTaxRate = Number(
         currentProject.prj_invoice_tax_rate ?? currentProject.prj_tax_rate,
       );
@@ -547,6 +574,19 @@ export async function PUT(request: Request) {
     // ================= Status =================
     if (body.prj_status !== undefined) {
       const requestedStatus = Number(body.prj_status);
+
+      if (requestedStatus === 2) {
+        const currentProject = await prisma.trs_project.findUnique({
+          where: { prj_id: id },
+          select: { prj_kode: true, prj_quotationno: true },
+        });
+        if (!currentProject) {
+          return NextResponse.json({ error: "Project was not found" }, { status: 404 });
+        }
+        const transactionNo = normalizeProjectNumber("TRS", currentProject.prj_kode) || currentProject.prj_kode;
+        updateData.prj_kode = transactionNo;
+        updateData.prj_quotationno = normalizeProjectNumber("QUO", currentProject.prj_quotationno, transactionNo);
+      }
 
       // Finish hanya menandai akhir invoice; status utama tetap Invoice.
       if (requestedStatus !== 6) {

@@ -3,6 +3,7 @@ import { PrismaClient } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/auth";
 import { isGoogleSheetsConfigured, syncProjectSpreadsheet } from "@/lib/google-sheets";
+import { createTransactionNumber } from "@/lib/project-numbers";
 
 const prisma = new PrismaClient();
 
@@ -61,10 +62,7 @@ export async function POST(request: Request) {
         throw new Error("Configure an active DBest identity in Master Data before creating a project.");
       }
       // Langkah A: Insert ke tabel trs_project
-      // Kode unik: tahun + timestamp, jauh lebih aman dari collision dibanding random 4 digit
-      const prjKode = `PRJ-${new Date().getFullYear()}-${Date.now()
-        .toString()
-        .slice(-8)}`;
+      const prjKode = createTransactionNumber();
 
       const newProject = await tx.trs_project.create({
         data: {

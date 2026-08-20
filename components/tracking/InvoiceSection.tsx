@@ -109,7 +109,7 @@ export default function InvoiceSection({
 
     drawPageDecoration();
     doc.setTextColor(...black);
-    if (companyLogo) doc.addImage(companyLogo, "PNG", 8, 12, 50, 23, undefined, "FAST");
+    if (companyLogo) doc.addImage(companyLogo, "PNG", 8, 13, 38, 18, undefined, "FAST");
     else {
       doc.setFont("times", "bolditalic");
       doc.setFontSize(18);

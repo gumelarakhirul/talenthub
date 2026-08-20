@@ -83,7 +83,9 @@ export default function DraftPage() {
   }, []);
 
   const loadProject = async () => {
-  const res = await fetch(`/api/tracking?id=${projectId}`);
+  const res = await fetch(`/api/tracking?id=${projectId}`, {
+    cache: "no-store",
+  });
   const data = await res.json();
 
   setProjectDetail((prev: any) => ({
@@ -741,10 +743,6 @@ case "Quotation":
       return null;
   }
 };
-
-console.log(projectDetail);
-console.log(projectDetail?.status);
-console.log(creators);
 
   if (!isClientReady) {
     return (

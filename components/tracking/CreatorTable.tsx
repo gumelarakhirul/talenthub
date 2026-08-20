@@ -158,6 +158,8 @@ type Props = {
   checkedCreators?: number[];
   selectedReportIds?: number[];
   onReportSelectionChange?: (ids: number[]) => void;
+  onOpenReport?: (detailIds: number[]) => void;
+  openingReportIds?: number[];
   handleSort: (field: string) => void;
 };
 
@@ -186,6 +188,8 @@ export default function CreatorTable({
   checkedCreators = [],
   selectedReportIds = [],
   onReportSelectionChange,
+  onOpenReport,
+  openingReportIds = [],
 }: Props) {
   const pageSize = 10;
   const [currentPage, setCurrentPage] = useState(1);
@@ -238,7 +242,7 @@ export default function CreatorTable({
       ];
 
   function renderReportRow(creator: any, index: number) {
-    const detailHref = `/tracking/report/detail-report?projectId=${creator.drf_projectid}&detailIds=${creator.drf_id}`;
+    const isOpeningReport = openingReportIds.includes(creator.drf_id);
 
     return (
       <tr
@@ -291,13 +295,15 @@ export default function CreatorTable({
         </td>
         <td className="p-3 text-center whitespace-nowrap sticky right-0 bg-white">
           {showView ? (
-            <Link
-              href={detailHref}
+            <button
+              type="button"
+              onClick={() => onOpenReport?.([creator.drf_id])}
+              disabled={!onOpenReport || isOpeningReport}
               className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-1.5 text-slate-700 hover:bg-slate-50"
             >
               <InvoiceIcon className="h-4 w-4 text-slate-900" />
-              <span>View</span>
-            </Link>
+              <span>{isOpeningReport ? "Loading..." : "View"}</span>
+            </button>
           ) : (
             "-"
           )}

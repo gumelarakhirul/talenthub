@@ -3,6 +3,7 @@ import FileDocumentIcon from "@/components/icons/FileDocumentIcon"; // Import Fi
 import CreatorTable from "./CreatorTable";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { loadCompanyLogo } from "@/lib/pdf-branding";
 
 type RunningCreator = {
   drf_id: number;
@@ -54,7 +55,8 @@ export default function RunningSection({
   readOnly = false,
   invalidRunningFields,
 }: Props) {
-  const handleExportToPdf = () => {
+  const handleExportToPdf = async () => {
+    const companyLogo = await loadCompanyLogo();
     const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -83,12 +85,9 @@ export default function RunningSection({
     doc.setFontSize(9);
     doc.splitTextToSize(companyAddress, 95).slice(0, 3).forEach((line: string, index: number) => doc.text(line, left, 22 + index * 5));
 
-    doc.setDrawColor(190, 150, 120);
-    doc.circle(pageWidth - 39, 23, 14);
-    doc.setFont("times", "bold");
-    doc.setFontSize(9);
-    doc.setTextColor(150, 110, 85);
-    doc.text(doc.splitTextToSize(companyName, 24).slice(0, 2), pageWidth - 39, 21, { align: "center" });
+    if (companyLogo) {
+      doc.addImage(companyLogo, "PNG", pageWidth - 67, 10, 50, 28, undefined, "FAST");
+    }
 
     doc.setTextColor(...black);
     doc.setFont("helvetica", "bold");

@@ -1,5 +1,5 @@
 import { ReactNode, useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import CreatorTable from "./CreatorTable";
 import ReportIcon from "@/components/icons/ReportIcon";
 import FileDocumentIcon from "@/components/icons/FileDocumentIcon";
@@ -25,7 +25,39 @@ export default function ReportSection({
 }: Props) {
   const [selectedReportIds, setSelectedReportIds] = useState<number[]>([]);
   const [exportingPdf, setExportingPdf] = useState(false);
-  const selectedQuery = selectedReportIds.map((id) => `detailIds=${id}`).join("&");
+  const [openingReportIds, setOpeningReportIds] = useState<number[]>([]);
+  const router = useRouter();
+
+  const handleOpenReport = async (detailIds: number[]) => {
+    if (!projectDetail?.id || detailIds.length === 0 || openingReportIds.length > 0) return;
+
+    try {
+      setOpeningReportIds(detailIds);
+      const response = await fetch("/api/tracking/detail-report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId: projectDetail.id, detailIds }),
+      });
+      const payload = await response.json().catch(() => ({})) as {
+        error?: string;
+        results?: Array<{ error?: string; creator?: string }>;
+      };
+      const failures = payload.results?.filter((result) => result.error) ?? [];
+      if (!response.ok && response.status !== 207) {
+        throw new Error(payload.error ?? "Failed to update report data.");
+      }
+      if (failures.length === detailIds.length) {
+        throw new Error(failures.map((failure) => `${failure.creator ?? "Creator"}: ${failure.error}`).join("\n"));
+      }
+
+      const query = new URLSearchParams({ projectId: String(projectDetail.id) });
+      detailIds.forEach((id) => query.append("detailIds", String(id)));
+      router.push(`/tracking/report/detail-report?${query.toString()}`);
+    } catch (error) {
+      await showAlertValidationError(error instanceof Error ? error.message : "Failed to update report data.");
+      setOpeningReportIds([]);
+    }
+  };
 
   const handleExportPdf = async () => {
     if (!projectDetail?.id) {
@@ -56,15 +88,16 @@ export default function ReportSection({
 
       <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs text-slate-500">10 entries per page</p>
-        <Link
-          href={`/tracking/report/detail-report?projectId=${projectDetail?.id ?? ""}&${selectedQuery}`}
+        <button
+          type="button"
           aria-disabled={selectedReportIds.length === 0}
-          onClick={(event) => { if (selectedReportIds.length === 0) event.preventDefault(); }}
-          className={`flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold transition sm:w-auto ${selectedReportIds.length ? "text-slate-700 hover:bg-slate-50" : "cursor-not-allowed text-slate-400 opacity-60"}`}
+          disabled={selectedReportIds.length === 0 || openingReportIds.length > 0}
+          onClick={() => void handleOpenReport(selectedReportIds)}
+          className={`flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold transition sm:w-auto ${selectedReportIds.length && openingReportIds.length === 0 ? "text-slate-700 hover:bg-slate-50" : "cursor-not-allowed text-slate-400 opacity-60"}`}
         >
           <ReportIcon className="h-5 w-5" />
-          View Report ({selectedReportIds.length})
-        </Link>
+          {openingReportIds.length > 0 ? "Updating report data..." : `View Report (${selectedReportIds.length})`}
+        </button>
       </div>
 
       <CreatorTable
@@ -75,6 +108,8 @@ export default function ReportSection({
         reportMode
         selectedReportIds={selectedReportIds}
         onReportSelectionChange={setSelectedReportIds}
+        onOpenReport={(ids) => void handleOpenReport(ids)}
+        openingReportIds={openingReportIds}
       />
 
       <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-end">

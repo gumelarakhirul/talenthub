@@ -4,21 +4,29 @@ import type { RawPost } from "./apify";
 // ============================================================================
 // ROTASI MULTI-API-KEY GEMINI
 
-const GEMINI_API_KEYS = (process.env.GEMINI_API_KEYS ?? "")
-  .split(",")
-  .map((k) => k.trim())
-  .filter(Boolean);
+function getGeminiApiKeys(): string[] {
+  // GEMINI_API_KEYS is the preferred multi-key setting. The two fallbacks keep
+  // existing local installations compatible while they migrate their env name.
+  const configuredKeys = process.env.GEMINI_API_KEYS
+    ?? process.env.GEMINI_API_KEY
+    ?? process.env["GEMINI-API_KEY"]
+    ?? "";
 
-if (GEMINI_API_KEYS.length === 0) {
-  throw new Error(
-    "GEMINI_API_KEYS tidak ditemukan di .env (pisahkan dengan koma kalau lebih dari 1)"
-  );
+  return configuredKeys
+    .split(",")
+    .map((key) => key.trim())
+    .filter(Boolean);
 }
 
 let currentKeyIndex = 0;
 
 function getGenAI(): GoogleGenerativeAI {
-  return new GoogleGenerativeAI(GEMINI_API_KEYS[currentKeyIndex]);
+  const keys = getGeminiApiKeys();
+  if (keys.length === 0) {
+    throw new Error("Gemini is not configured. Add GEMINI_API_KEYS to the deployment environment variables.");
+  }
+  currentKeyIndex %= keys.length;
+  return new GoogleGenerativeAI(keys[currentKeyIndex]);
 }
 
 function isRateLimitOrQuotaError(err: any): boolean {
@@ -83,6 +91,11 @@ async function generateWithRetry(
   prompt: string,
   options?: GenerateOptions
 ): Promise<string> {
+  const apiKeys = getGeminiApiKeys();
+  if (apiKeys.length === 0) {
+    throw new Error("Gemini is not configured. Add GEMINI_API_KEYS to the deployment environment variables.");
+  }
+  currentKeyIndex %= apiKeys.length;
   const startKeyIndex = currentKeyIndex;
   let attempts = 0;
   let lastError: any;
@@ -90,7 +103,7 @@ async function generateWithRetry(
   // Lapis 1: coba semua model dengan key yang sedang aktif.
   // Kalau SEMUA model gagal karena rate-limit/quota (bukan error lain),
   // rotasi ke API key berikutnya dan ulangi dari model pertama lagi.
-  while (attempts < GEMINI_API_KEYS.length) {
+  while (attempts < apiKeys.length) {
     try {
       return await tryAllModelsWithCurrentKey(prompt, options);
     } catch (err: any) {
@@ -105,7 +118,7 @@ async function generateWithRetry(
       console.warn(
         `  [GEMINI] Key index ${currentKeyIndex} kena limit. Rotasi ke key berikutnya...`
       );
-      currentKeyIndex = (currentKeyIndex + 1) % GEMINI_API_KEYS.length;
+      currentKeyIndex = (currentKeyIndex + 1) % apiKeys.length;
       attempts++;
 
       // Kalau sudah muter balik ke key awal, berarti semua key sudah dicoba.
